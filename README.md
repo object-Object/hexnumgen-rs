@@ -17,6 +17,10 @@ https://pyo3.rs/v0.17.3/getting_started
 
 https://github.com/PyO3/maturin
 
+## Building for Linux
+
+https://www.maturin.rs/distribution.html#use-zig
+
 ## Attribution
 
 Lots of inspiration from https://github.com/DaComputerNerd717/Hex-Casting-Generator. Same algorithm, somewhat different implementation.

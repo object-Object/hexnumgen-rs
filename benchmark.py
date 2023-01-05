@@ -18,12 +18,12 @@ def worker(f: Callable[[], GeneratedNumber | None]) -> tuple[float, int | None, 
 
 
 def beam_worker(n: int) -> tuple[float, int | None, int | None]:
-    return worker(lambda: generate_number_pattern_beam(n, 8, 8, 8, 25, True))
+    return worker(lambda: generate_number_pattern_beam(n, 6, 5, 6, 25, True))
 
 
 if __name__ == "__main__":
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 1)
-    numbers = range(100)
+    numbers = range(1000)
 
     beam_times, beam_points, beam_sizes = zip(*pool.map(beam_worker, numbers))
     
