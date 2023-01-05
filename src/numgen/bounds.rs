@@ -10,8 +10,12 @@ impl Bounds {
         Self { q, r, s }
     }
 
+    pub fn quasi_area(&self) -> u32 {
+        self.q * self.r * self.s
+    }
+
     pub fn is_better_than(&self, other: Self) -> bool {
-        self.q * self.r * self.s < other.q * other.r * other.s
+        self.quasi_area() < other.quasi_area()
     }
 
     pub fn fits_in(&self, other: Self) -> bool {

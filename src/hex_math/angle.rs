@@ -12,7 +12,7 @@ pub enum Angle {
 }
 
 impl Angle {
-    pub fn apply_to_int(&self, num: i32) -> Result<i32, HexError> {
+    pub fn apply_to_int(&self, num: u32) -> Result<u32, HexError> {
         match self {
             Angle::Forward => Ok(num + 1),
             Angle::Left => Ok(num + 5),
