@@ -2,21 +2,19 @@ use strum::IntoEnumIterator;
 
 use crate::{hex_math::Angle, utils::NonZeroSign};
 
-use super::{Bounds, Path, QueuedPath};
+use super::{Path, QueuedPath};
 use std::collections::BinaryHeap;
 
 pub struct AStarPathGenerator {
     target: u32,
-    bounds: Bounds,
     trim_larger: bool,
     smallest: Option<Path>,
     frontier: BinaryHeap<QueuedPath>,
 }
 
 impl AStarPathGenerator {
-    pub fn new(target: i32, bounds: Bounds, trim_larger: bool) -> Self {
-        let mut gen =
-            Self { target: target.unsigned_abs(), bounds, trim_larger, smallest: None, frontier: BinaryHeap::new() };
+    pub fn new(target: i32, trim_larger: bool) -> Self {
+        let mut gen = Self { target: target.unsigned_abs(), trim_larger, smallest: None, frontier: BinaryHeap::new() };
         gen.push_path(Path::zero(NonZeroSign::from(target)));
         gen
     }
@@ -72,9 +70,7 @@ impl AStarPathGenerator {
         Angle::iter()
             .filter_map(|angle| {
                 if let Ok(new_path) = path.with_angle(angle) {
-                    if new_path.bounds().fits_in(self.bounds)
-                        && (!self.trim_larger || new_path.value() <= self.target)
-                        && new_path.should_replace(&self.smallest)
+                    if (!self.trim_larger || new_path.value() <= self.target) && new_path.should_replace(&self.smallest)
                     {
                         return Some(new_path);
                     }

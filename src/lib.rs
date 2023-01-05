@@ -42,8 +42,8 @@ pub fn generate_number_pattern_beam(
     })
 }
 
-pub fn generate_number_pattern_astar(target: i32, bounds: Bounds, trim_larger: bool) -> Option<GeneratedNumber> {
-    let path = AStarPathGenerator::new(target, bounds, trim_larger).run()?;
+pub fn generate_number_pattern_astar(target: i32, trim_larger: bool) -> Option<GeneratedNumber> {
+    let path = AStarPathGenerator::new(target, trim_larger).run()?;
     Some(GeneratedNumber {
         direction: path.starting_direction().to_string(),
         pattern: path.pattern(),
@@ -72,18 +72,8 @@ fn generate_number_pattern_beam_py(
 
 #[pyfunction]
 #[pyo3(name = "generate_number_pattern_astar")]
-fn generate_number_pattern_astar_py(
-    target: i32,
-    q_size: Option<u32>,
-    r_size: Option<u32>,
-    s_size: Option<u32>,
-    trim_larger: Option<bool>,
-) -> Option<GeneratedNumber> {
-    generate_number_pattern_astar(
-        target,
-        Bounds::new(q_size.unwrap_or(8), r_size.unwrap_or(8), s_size.unwrap_or(8)),
-        trim_larger.unwrap_or(true),
-    )
+fn generate_number_pattern_astar_py(target: i32, trim_larger: Option<bool>) -> Option<GeneratedNumber> {
+    generate_number_pattern_astar(target, trim_larger.unwrap_or(true))
 }
 
 #[pymodule]

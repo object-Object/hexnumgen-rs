@@ -38,7 +38,7 @@ fn main() -> Result<(), String> {
         Bounds::new(cli.q_size.unwrap_or(cli.size), cli.r_size.unwrap_or(cli.size), cli.s_size.unwrap_or(cli.size));
 
     let GeneratedNumber { direction, pattern, .. } = if cli.astar {
-        generate_number_pattern_astar(target, bounds, !cli.keep_larger)
+        generate_number_pattern_astar(target, !cli.keep_larger)
     } else {
         generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger)
     }

@@ -19,3 +19,8 @@ def generate_number_pattern_beam(
     carryover: int = 25,
     trim_larger: bool = True,
 ) -> GeneratedNumber | None: ...
+
+def generate_number_pattern_astar(
+    target: int,
+    trim_larger: bool = True,
+) -> GeneratedNumber | None: ...
