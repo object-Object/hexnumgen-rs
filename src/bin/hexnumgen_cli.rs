@@ -1,5 +1,5 @@
 use clap::Parser;
-use hexnumgen::{generate_number_pattern, Bounds, GeneratedNumber};
+use hexnumgen::{generate_number_pattern_beam, Bounds, GeneratedNumber};
 
 #[derive(Parser)]
 struct Cli {
@@ -35,7 +35,7 @@ fn main() -> Result<(), String> {
         Bounds::new(cli.q_size.unwrap_or(cli.size), cli.r_size.unwrap_or(cli.size), cli.s_size.unwrap_or(cli.size));
 
     let GeneratedNumber { direction, pattern, .. } =
-        generate_number_pattern(target, bounds, cli.carryover, !cli.keep_larger)
+        generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger)
             .ok_or_else(|| format!("No pattern found for {target}"))?;
 
     println!("{direction} {pattern}");

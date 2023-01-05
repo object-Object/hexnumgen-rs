@@ -3,7 +3,7 @@ mod hex_math;
 mod numgen;
 mod utils;
 
-use numgen::PathGenerator;
+use numgen::BeamPathGenerator;
 use pyo3::prelude::*;
 
 pub use numgen::Bounds;
@@ -27,13 +27,13 @@ impl GeneratedNumber {
     }
 }
 
-pub fn generate_number_pattern(
+pub fn generate_number_pattern_beam(
     target: i32,
     bounds: Bounds,
     carryover: usize,
     trim_larger: bool,
 ) -> Option<GeneratedNumber> {
-    let path = PathGenerator::new(target, bounds, carryover, trim_larger).run()?;
+    let path = BeamPathGenerator::new(target, bounds, carryover, trim_larger).run()?;
     Some(GeneratedNumber {
         direction: path.starting_direction().to_string(),
         pattern: path.pattern(),
@@ -43,8 +43,8 @@ pub fn generate_number_pattern(
 }
 
 #[pyfunction]
-#[pyo3(name = "generate_number_pattern")]
-fn generate_number_pattern_py(
+#[pyo3(name = "generate_number_pattern_beam")]
+fn generate_number_pattern_beam_py(
     target: i32,
     q_size: Option<u32>,
     r_size: Option<u32>,
@@ -52,7 +52,7 @@ fn generate_number_pattern_py(
     carryover: Option<usize>,
     trim_larger: Option<bool>,
 ) -> Option<GeneratedNumber> {
-    generate_number_pattern(
+    generate_number_pattern_beam(
         target,
         Bounds::new(q_size.unwrap_or(8), r_size.unwrap_or(8), s_size.unwrap_or(8)),
         carryover.unwrap_or(25),
@@ -62,7 +62,7 @@ fn generate_number_pattern_py(
 
 #[pymodule]
 fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(generate_number_pattern_py, m)?)?;
+    m.add_function(wrap_pyfunction!(generate_number_pattern_beam_py, m)?)?;
     m.add_class::<GeneratedNumber>()?;
     Ok(())
 }

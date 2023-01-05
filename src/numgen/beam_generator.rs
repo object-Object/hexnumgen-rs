@@ -4,9 +4,9 @@ use crate::{hex_math::Angle, utils::NonZeroSign};
 use itertools::Itertools;
 use strum::IntoEnumIterator;
 
-use super::{path::Path, Bounds};
+use super::{Bounds, Path};
 
-pub struct PathGenerator {
+pub struct BeamPathGenerator {
     target: i32,
     bounds: Bounds,
     carryover: usize,
@@ -15,7 +15,7 @@ pub struct PathGenerator {
     paths: Vec<Path>,
 }
 
-impl PathGenerator {
+impl BeamPathGenerator {
     pub fn new(target: i32, bounds: Bounds, carryover: usize, trim_larger: bool) -> Self {
         Self {
             target: target.abs(),

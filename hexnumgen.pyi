@@ -11,7 +11,7 @@ class GeneratedNumber:
     @property
     def num_points(self) -> int: ...
 
-def generate_number_pattern(
+def generate_number_pattern_beam(
     target: int,
     q_size: int = 8,
     r_size: int = 8,

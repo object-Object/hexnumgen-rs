@@ -1,3 +1,3 @@
-from hexnumgen import generate_number_pattern
+from hexnumgen import generate_number_pattern_beam
 
-print(generate_number_pattern(100))
+print(generate_number_pattern_beam(100))
