@@ -72,7 +72,9 @@ impl AStarPathGenerator {
         Angle::iter()
             .filter_map(|angle| {
                 if let Ok(new_path) = path.with_angle(angle) {
-                    if new_path.bounds().fits_in(self.bounds) && (!self.trim_larger || new_path.value() <= self.target)
+                    if new_path.bounds().fits_in(self.bounds)
+                        && (!self.trim_larger || new_path.value() <= self.target)
+                        && new_path.should_replace(&self.smallest)
                     {
                         return Some(new_path);
                     }
