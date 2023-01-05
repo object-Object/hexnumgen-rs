@@ -4,13 +4,13 @@ VERY WIP
 
 ## Usage (CLI)
 
-`cargo run -- --help` or `cargo build --bin`
+Run `cargo run -- --help` or `cargo build --bin`
 
 ## Usage (Python)
 
 * Create and enter a venv
 * Run `pip install maturin`
-* Run `maturin develop`
+* Run `maturin develop --release`
 * Run `python example.py`
 
 https://pyo3.rs/v0.17.3/getting_started

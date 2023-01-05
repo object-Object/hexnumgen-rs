@@ -17,6 +17,10 @@ impl Bounds {
     pub fn fits_in(&self, other: Self) -> bool {
         self.q <= other.q && self.r <= other.r && self.s <= other.s
     }
+
+    pub fn largest_dimension(&self) -> u32 {
+        *[self.q, self.r, self.r].iter().max().unwrap()
+    }
 }
 
 impl From<u32> for Bounds {
