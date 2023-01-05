@@ -1,0 +1,18 @@
+# hexnumgen-rs
+
+VERY WIP
+
+## Usage (CLI)
+
+`cargo run -- --help` or `cargo build --bin`
+
+## Usage (Python)
+
+* Create and enter a venv
+* Run `pip install maturin`
+* Run `maturin develop`
+* Run `python example.py`
+
+https://pyo3.rs/v0.17.3/getting_started
+
+https://github.com/PyO3/maturin
