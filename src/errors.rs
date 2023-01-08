@@ -9,7 +9,7 @@ pub enum HexError {
     #[error("invalid angle `{0:?}`")]
     InvalidAngle(Angle),
     #[error("invalid angle `{0:?}` for number `{1}`")]
-    InvalidAngleForNumber(Angle, i32),
+    InvalidAngleForNumber(Angle, u32),
     #[error("segment `{0:?}` already exists in path")]
     SegmentAlreadyExists(Segment),
 }

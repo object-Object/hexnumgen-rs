@@ -3,9 +3,10 @@ mod hex_math;
 mod numgen;
 mod utils;
 
-use numgen::BeamPathGenerator;
+use numgen::{AStarPathGenerator, BeamPathGenerator};
 use pyo3::prelude::*;
 
+pub use hex_math::Direction;
 pub use numgen::Bounds;
 
 #[pyclass]
@@ -42,6 +43,16 @@ pub fn generate_number_pattern_beam(
     })
 }
 
+pub fn generate_number_pattern_astar(target: i32, trim_larger: bool) -> Option<GeneratedNumber> {
+    let path = AStarPathGenerator::new(target, trim_larger).run()?;
+    Some(GeneratedNumber {
+        direction: path.starting_direction().to_string(),
+        pattern: path.pattern(),
+        largest_dimension: path.bounds().largest_dimension(),
+        num_points: path.num_points(),
+    })
+}
+
 #[pyfunction]
 #[pyo3(name = "generate_number_pattern_beam")]
 fn generate_number_pattern_beam_py(
@@ -60,9 +71,16 @@ fn generate_number_pattern_beam_py(
     )
 }
 
+#[pyfunction]
+#[pyo3(name = "generate_number_pattern_astar")]
+fn generate_number_pattern_astar_py(target: i32, trim_larger: Option<bool>) -> Option<GeneratedNumber> {
+    generate_number_pattern_astar(target, trim_larger.unwrap_or(true))
+}
+
 #[pymodule]
 fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_number_pattern_beam_py, m)?)?;
+    m.add_function(wrap_pyfunction!(generate_number_pattern_astar_py, m)?)?;
     m.add_class::<GeneratedNumber>()?;
     Ok(())
 }

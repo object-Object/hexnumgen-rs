@@ -12,7 +12,7 @@ use super::{Bounds, MinMax};
 #[derive(Clone)]
 pub struct Path {
     sign: NonZeroSign,
-    value: i32,
+    value: u32,
     segments: Vec<Segment>,
     segments_set: HashSet<Segment>,
     points_set: HashSet<Coord>,
@@ -37,7 +37,7 @@ impl Path {
         }
     }
 
-    pub fn value(&self) -> i32 {
+    pub fn value(&self) -> u32 {
         self.value
     }
 
@@ -78,5 +78,9 @@ impl Path {
 
     pub fn pattern(&self) -> String {
         self.segments.iter().tuple_windows().map(|(a, b)| char::from(b.direction().angle_from(a.direction()))).collect()
+    }
+
+    pub fn should_replace(&self, other: &Option<Path>) -> bool {
+        other.as_ref().filter(|path| !self.bounds().is_better_than(path.bounds())).is_none()
     }
 }

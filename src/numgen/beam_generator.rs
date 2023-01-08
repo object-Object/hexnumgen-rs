@@ -7,7 +7,7 @@ use strum::IntoEnumIterator;
 use super::{Bounds, Path};
 
 pub struct BeamPathGenerator {
-    target: i32,
+    target: u32,
     bounds: Bounds,
     carryover: usize,
     trim_larger: bool,
@@ -18,7 +18,7 @@ pub struct BeamPathGenerator {
 impl BeamPathGenerator {
     pub fn new(target: i32, bounds: Bounds, carryover: usize, trim_larger: bool) -> Self {
         Self {
-            target: target.abs(),
+            target: target.unsigned_abs(),
             bounds,
             carryover,
             trim_larger,
@@ -79,7 +79,7 @@ impl BeamPathGenerator {
         let target = self.target;
 
         self.filter_by_key(&mut rest, |path| path.len()); // shortest
-        self.filter_by_key(&mut rest, |path| (path.value() - target).abs()); // closest to target
+        self.filter_by_key(&mut rest, |path| path.value().abs_diff(target)); // closest to target
         self.filter_by_key(&mut rest, |path| path.num_points()); // fewest points
     }
 
@@ -91,12 +91,7 @@ impl BeamPathGenerator {
             match path.value().cmp(&self.target) {
                 Ordering::Less => self.paths.push(path),
                 Ordering::Equal => {
-                    if self
-                        .smallest
-                        .as_ref()
-                        .filter(|smallest| !path.bounds().is_better_than(smallest.bounds()))
-                        .is_none()
-                    {
+                    if path.should_replace(&self.smallest) {
                         self.smallest = Some(path);
                     }
                 }

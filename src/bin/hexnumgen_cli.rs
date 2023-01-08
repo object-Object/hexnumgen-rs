@@ -1,5 +1,5 @@
 use clap::Parser;
-use hexnumgen::{generate_number_pattern_beam, Bounds, GeneratedNumber};
+use hexnumgen::{generate_number_pattern_astar, generate_number_pattern_beam, Bounds, GeneratedNumber};
 
 #[derive(Parser)]
 struct Cli {
@@ -8,6 +8,9 @@ struct Cli {
     /// Whether to make the target negative
     #[arg(short, long)]
     negative: bool,
+    /// Whether to use the A* algorithm instead of beam search
+    #[arg(short, long)]
+    astar: bool,
     /// Maximum size of the generated pattern (overridden by q_size, r_size, and/or s_size if set)
     #[arg(long, default_value_t = 8)]
     size: u32,
@@ -34,9 +37,12 @@ fn main() -> Result<(), String> {
     let bounds =
         Bounds::new(cli.q_size.unwrap_or(cli.size), cli.r_size.unwrap_or(cli.size), cli.s_size.unwrap_or(cli.size));
 
-    let GeneratedNumber { direction, pattern, .. } =
+    let GeneratedNumber { direction, pattern, .. } = if cli.astar {
+        generate_number_pattern_astar(target, !cli.keep_larger)
+    } else {
         generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger)
-            .ok_or_else(|| format!("No pattern found for {target}"))?;
+    }
+    .ok_or_else(|| format!("No pattern found for {target}"))?;
 
     println!("{direction} {pattern}");
     Ok(())

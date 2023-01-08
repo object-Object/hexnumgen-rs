@@ -4,7 +4,9 @@ VERY WIP
 
 ## Usage (CLI)
 
-Run `cargo run -- --help` or `cargo build --bin`
+Single number: `cargo run --release -- --help`
+
+Pregen: run `cargo run --release --bin pregen -- --help`
 
 ## Usage (Python)
 
