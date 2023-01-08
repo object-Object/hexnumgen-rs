@@ -11,7 +11,7 @@ impl Bounds {
     }
 
     pub fn quasi_area(&self) -> u32 {
-        self.q * self.r
+        self.q * self.r * self.s
     }
 
     pub fn is_better_than(&self, other: Self) -> bool {

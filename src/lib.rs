@@ -6,6 +6,7 @@ mod utils;
 use numgen::{AStarPathGenerator, BeamPathGenerator};
 use pyo3::prelude::*;
 
+pub use hex_math::Direction;
 pub use numgen::Bounds;
 
 #[pyclass]
