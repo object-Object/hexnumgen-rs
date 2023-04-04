@@ -1,34 +1,41 @@
-use std::{cmp::Ordering, mem};
+use std::mem;
 
-use crate::{hex_math::Angle, utils::NonZeroSign};
+use crate::{
+    hex_math::Angle,
+    traits::{AbsDiffRatio, UnsignedAbsRatio},
+};
 use itertools::Itertools;
+use num_rational::Ratio;
+use num_traits::Zero;
 use strum::IntoEnumIterator;
 
 use super::{Bounds, Path};
 
 pub struct BeamPathGenerator {
-    target: u32,
+    target: Ratio<u64>,
     bounds: Bounds,
     carryover: usize,
     trim_larger: bool,
+    allow_fractions: bool,
     smallest: Option<Path>,
     paths: Vec<Path>,
 }
 
 impl BeamPathGenerator {
-    pub fn new(target: i32, bounds: Bounds, carryover: usize, trim_larger: bool) -> Self {
+    pub fn new(target: Ratio<i64>, bounds: Bounds, carryover: usize, trim_larger: bool, allow_fractions: bool) -> Self {
         Self {
             target: target.unsigned_abs(),
             bounds,
             carryover,
             trim_larger,
+            allow_fractions,
             smallest: None,
-            paths: vec![Path::zero(NonZeroSign::from(target))],
+            paths: vec![Path::zero(target.into())],
         }
     }
 
     pub fn run(mut self) -> Option<Path> {
-        if self.target == 0 {
+        if self.target.is_zero() {
             return Some(self.paths[0].clone());
         }
         while !self.paths.is_empty() {
@@ -46,7 +53,9 @@ impl BeamPathGenerator {
             .cartesian_product(Angle::iter())
             .filter_map(|(path, angle)| {
                 if let Ok(new_path) = path.with_angle(angle) {
-                    if new_path.bounds().fits_in(self.bounds) && (!self.trim_larger || new_path.value() <= self.target)
+                    if (!self.trim_larger || new_path.value() <= self.target)
+                        && (self.allow_fractions || new_path.value().is_integer())
+                        && new_path.bounds().fits_in(self.bounds)
                     {
                         return Some(new_path);
                     }
@@ -88,14 +97,10 @@ impl BeamPathGenerator {
         mem::swap(&mut self.paths, &mut rest);
 
         for path in rest {
-            match path.value().cmp(&self.target) {
-                Ordering::Less => self.paths.push(path),
-                Ordering::Equal => {
-                    if path.should_replace(&self.smallest) {
-                        self.smallest = Some(path);
-                    }
-                }
-                _ => (),
+            if path.value() != self.target {
+                self.paths.push(path);
+            } else if path.should_replace(&self.smallest) {
+                self.smallest = Some(path);
             }
         }
     }

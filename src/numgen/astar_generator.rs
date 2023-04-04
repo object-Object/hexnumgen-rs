@@ -1,26 +1,35 @@
+use num_rational::Ratio;
+use num_traits::Zero;
 use strum::IntoEnumIterator;
 
-use crate::{hex_math::Angle, utils::NonZeroSign};
+use crate::{hex_math::Angle, traits::UnsignedAbsRatio, utils::NonZeroSign};
 
 use super::{Path, QueuedPath};
 use std::collections::BinaryHeap;
 
 pub struct AStarPathGenerator {
-    target: u32,
+    target: Ratio<u64>,
     trim_larger: bool,
+    allow_fractions: bool,
     smallest: Option<Path>,
     frontier: BinaryHeap<QueuedPath>,
 }
 
 impl AStarPathGenerator {
-    pub fn new(target: i32, trim_larger: bool) -> Self {
-        let mut gen = Self { target: target.unsigned_abs(), trim_larger, smallest: None, frontier: BinaryHeap::new() };
+    pub fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool) -> Self {
+        let mut gen = Self {
+            target: target.unsigned_abs(),
+            trim_larger,
+            allow_fractions,
+            smallest: None,
+            frontier: BinaryHeap::new(),
+        };
         gen.push_path(Path::zero(NonZeroSign::from(target)));
         gen
     }
 
     pub fn run(mut self) -> Option<Path> {
-        if self.target == 0 {
+        if self.target.is_zero() {
             return self.frontier.pop().map(Into::into);
         }
 
@@ -70,7 +79,9 @@ impl AStarPathGenerator {
         Angle::iter()
             .filter_map(|angle| {
                 if let Ok(new_path) = path.with_angle(angle) {
-                    if (!self.trim_larger || new_path.value() <= self.target) && new_path.should_replace(&self.smallest)
+                    if (!self.trim_larger || new_path.value() <= self.target)
+                        && (self.allow_fractions || new_path.value().is_integer())
+                        && new_path.should_replace(&self.smallest)
                     {
                         return Some(new_path);
                     }
@@ -85,12 +96,12 @@ impl AStarPathGenerator {
         let mut target = self.target;
         let mut heuristic = path.len();
 
-        if val == 0 {
+        if val.is_zero() {
             heuristic += 1;
 
-            if target > 10 {
+            if target > 10.into() {
                 val += 10;
-            } else if target > 5 {
+            } else if target > 5.into() {
                 val += 5;
             } else {
                 val += 1;

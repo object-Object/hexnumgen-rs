@@ -1,3 +1,6 @@
+use num_integer::Integer;
+use num_rational::Ratio;
+use num_traits::Signed;
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -13,6 +16,19 @@ impl From<i32> for NonZeroSign {
             NonZeroSign::Positive
         } else {
             NonZeroSign::Negative
+        }
+    }
+}
+
+impl<T> From<Ratio<T>> for NonZeroSign
+where
+    T: Clone + Integer + Signed,
+{
+    fn from(value: Ratio<T>) -> Self {
+        if value.is_negative() {
+            NonZeroSign::Negative
+        } else {
+            NonZeroSign::Positive
         }
     }
 }

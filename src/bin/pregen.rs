@@ -1,5 +1,7 @@
 use clap::Parser;
 use hexnumgen::{generate_number_pattern_astar, Direction, GeneratedNumber};
+use num_rational::Ratio;
+use num_traits::Zero;
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
 use std::{
@@ -21,16 +23,16 @@ fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     groups
 }
 
-fn worker(targets: Vec<i32>, tx: Sender<HashMap<i32, (String, String)>>) {
+fn worker(targets: Vec<Ratio<i64>>, tx: Sender<HashMap<Ratio<i64>, (String, String)>>) {
     let mut data = HashMap::new();
     let re = Regex::new(r"^aqaa").unwrap();
 
     for (i, &target) in targets.iter().enumerate() {
         println!("{}/{}", i + 1, targets.len());
 
-        let GeneratedNumber { direction, pattern, .. } = generate_number_pattern_astar(target, false).unwrap();
+        let GeneratedNumber { direction, pattern, .. } = generate_number_pattern_astar(target, false, false).unwrap();
 
-        if target != 0 {
+        if !target.is_zero() {
             let negative_pattern = re.replace(&pattern, "dedd").to_string();
             data.insert(-target, (Direction::NorthEast.to_string(), negative_pattern));
         }
@@ -44,13 +46,13 @@ fn worker(targets: Vec<i32>, tx: Sender<HashMap<i32, (String, String)>>) {
 #[derive(Parser)]
 struct Cli {
     /// Largest number to generate a literal for
-    max: i32,
+    max: u64,
 }
 
 fn main() {
     let max = Cli::parse().max;
 
-    let mut all_targets = Vec::from_iter(0..=max);
+    let mut all_targets = Vec::from_iter((0..=max).map(|n| (n as i64).into()));
     all_targets.shuffle(&mut thread_rng());
 
     let cpus = thread::available_parallelism().unwrap().get() - 1;

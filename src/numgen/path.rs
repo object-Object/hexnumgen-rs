@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num_rational::Ratio;
 use std::collections::HashSet;
 
 use crate::{
@@ -12,7 +13,7 @@ use super::{Bounds, MinMax};
 #[derive(Clone)]
 pub struct Path {
     sign: NonZeroSign,
-    value: u32,
+    value: Ratio<u64>,
     segments: Vec<Segment>,
     segments_set: HashSet<Segment>,
     points_set: HashSet<Coord>,
@@ -29,7 +30,7 @@ impl Path {
 
         Self {
             sign,
-            value: 0,
+            value: 0.into(),
             segments: segments.clone(),
             segments_set: HashSet::from_iter(segments.clone()),
             points_set: HashSet::from_iter(segments.iter().flat_map(|segment| [segment.root(), segment.end()])),
@@ -37,7 +38,7 @@ impl Path {
         }
     }
 
-    pub fn value(&self) -> u32 {
+    pub fn value(&self) -> Ratio<u64> {
         self.value
     }
 
@@ -54,7 +55,7 @@ impl Path {
     }
 
     pub fn with_angle(&self, angle: Angle) -> Result<Self, HexError> {
-        let new_value = angle.apply_to_int(self.value)?;
+        let new_value = angle.apply_to(self.value)?;
         let new_segment = self.segments.last().unwrap().next_segment(angle);
         let new_point = new_segment.end();
 

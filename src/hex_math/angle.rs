@@ -1,4 +1,5 @@
 use crate::errors::HexError;
+use num_rational::Ratio;
 use strum::EnumIter;
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, EnumIter)]
@@ -12,19 +13,13 @@ pub enum Angle {
 }
 
 impl Angle {
-    pub fn apply_to_int(&self, num: u32) -> Result<u32, HexError> {
+    pub fn apply_to(&self, num: Ratio<u64>) -> Result<Ratio<u64>, HexError> {
         match self {
             Angle::Forward => Ok(num + 1),
             Angle::Left => Ok(num + 5),
             Angle::Right => Ok(num + 10),
             Angle::LeftBack => Ok(num * 2),
-            Angle::RightBack => {
-                if num % 2 == 0 {
-                    Ok(num / 2)
-                } else {
-                    Err(HexError::InvalidAngleForNumber(*self, num))
-                }
-            }
+            Angle::RightBack => Ok(num / 2),
             _ => Err(HexError::InvalidAngle(*self)),
         }
     }
