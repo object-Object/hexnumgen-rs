@@ -2,9 +2,13 @@ use num_rational::Ratio;
 use num_traits::Zero;
 use strum::IntoEnumIterator;
 
-use crate::{hex_math::Angle, traits::UnsignedAbsRatio, utils::NonZeroSign};
+use crate::{
+    hex_math::Angle,
+    numgen::{Path, QueuedPath},
+    traits::UnsignedAbsRatio,
+    utils::NonZeroSign,
+};
 
-use super::{Path, QueuedPath};
 use std::collections::BinaryHeap;
 
 pub struct AStarPathGenerator {

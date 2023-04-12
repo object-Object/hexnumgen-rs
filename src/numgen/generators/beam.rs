@@ -2,14 +2,13 @@ use std::mem;
 
 use crate::{
     hex_math::Angle,
+    numgen::{Bounds, Path},
     traits::{AbsDiffRatio, UnsignedAbsRatio},
 };
 use itertools::Itertools;
 use num_rational::Ratio;
 use num_traits::Zero;
 use strum::IntoEnumIterator;
-
-use super::{Bounds, Path};
 
 pub struct BeamPathGenerator {
     target: Ratio<u64>,
