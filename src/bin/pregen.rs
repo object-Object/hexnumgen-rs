@@ -1,11 +1,10 @@
 use clap::Parser;
-use hexnumgen::{generate_number_pattern_astar, Direction, GeneratedNumber};
-use num_rational::Ratio;
+use hexnumgen::{generate_number_pattern_astar, generate_number_pattern_beam, Direction, GeneratedNumber};
 use num_traits::Zero;
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fs,
     sync::mpsc::{self, Sender},
     thread,
@@ -23,14 +22,16 @@ fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     groups
 }
 
-fn worker(targets: Vec<Ratio<i64>>, tx: Sender<HashMap<Ratio<i64>, (String, String)>>) {
-    let mut data = HashMap::new();
+fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, (String, String)> {
+    let mut data = BTreeMap::new();
     let re = Regex::new(r"^aqaa").unwrap();
 
     for (i, &target) in targets.iter().enumerate() {
         println!("{}/{}", i + 1, targets.len());
 
-        let GeneratedNumber { direction, pattern, .. } = generate_number_pattern_astar(target, false, false).unwrap();
+        let GeneratedNumber { direction, pattern, .. } =
+            generate_number_pattern_astar(target.into(), false, false).unwrap();
+        // generate_number_pattern_beam(target.into(), 8.into(), 100, false, false, None).unwrap();
 
         if !target.is_zero() {
             let negative_pattern = re.replace(&pattern, "dedd").to_string();
@@ -40,35 +41,46 @@ fn worker(targets: Vec<Ratio<i64>>, tx: Sender<HashMap<Ratio<i64>, (String, Stri
         data.insert(target, (direction, pattern));
     }
 
-    tx.send(data).unwrap();
+    data
+}
+
+fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, (String, String)>>) {
+    tx.send(find_patterns(targets)).unwrap();
 }
 
 #[derive(Parser)]
 struct Cli {
-    /// Largest number to generate a literal for
+    /// Largest number to generate a literal for.
     max: u64,
+
+    /// Number of threads to use.
+    threads: Option<usize>,
 }
 
 fn main() {
-    let max = Cli::parse().max;
+    let cli = Cli::parse();
 
-    let mut all_targets = Vec::from_iter((0..=max).map(|n| (n as i64).into()));
-    all_targets.shuffle(&mut thread_rng());
+    let mut all_targets = Vec::from_iter(0..=(cli.max as i64));
+    let all_data = match cli.threads {
+        Some(threads) => {
+            all_targets.shuffle(&mut thread_rng());
 
-    let cpus = thread::available_parallelism().unwrap().get() - 1;
+            let (tx, rx) = mpsc::channel();
 
-    let (tx, rx) = mpsc::channel();
+            for targets in n_groups(all_targets, threads) {
+                let tx = tx.clone();
+                thread::spawn(move || worker(targets, tx));
+            }
+            drop(tx);
 
-    for targets in n_groups(all_targets, cpus) {
-        let tx = tx.clone();
-        thread::spawn(move || worker(targets, tx));
-    }
-    drop(tx);
+            let mut all_data = BTreeMap::new();
+            while let Ok(data) = rx.recv() {
+                all_data.extend(data);
+            }
+            all_data
+        }
+        None => find_patterns(all_targets),
+    };
 
-    let mut all_data = HashMap::new();
-    while let Ok(data) = rx.recv() {
-        all_data.extend(data);
-    }
-
-    fs::write(format!("numbers_{max}.json"), serde_json::to_string(&all_data).unwrap()).unwrap();
+    fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
 }
