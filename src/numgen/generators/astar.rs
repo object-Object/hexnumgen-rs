@@ -112,14 +112,16 @@ impl AStarPathGenerator {
             }
         }
 
-        while val > target {
-            val /= 2;
-            heuristic += 1;
-        }
+        if !target.is_zero() {
+            while val > target {
+                val /= 2;
+                heuristic += 1;
+            }
 
-        while target / 2 > val {
-            target /= 2;
-            heuristic += 1;
+            while target / 2 > val {
+                target /= 2;
+                heuristic += 1;
+            }
         }
 
         heuristic
