@@ -1,5 +1,3 @@
-use std::mem;
-
 use crate::{
     hex_math::Angle,
     numgen::{Bounds, Path},
@@ -11,13 +9,16 @@ use num_traits::Zero;
 use strum::IntoEnumIterator;
 
 pub struct BeamPathGenerator {
-    target: Ratio<u64>,
-    bounds: Bounds,
-    carryover: usize,
-    trim_larger: bool,
-    allow_fractions: bool,
-    smallest: Option<Path>,
-    paths: Vec<Path>,
+    // params
+    pub target: Ratio<u64>,
+    pub bounds: Bounds,
+    pub carryover: usize,
+    pub trim_larger: bool,
+    pub allow_fractions: bool,
+
+    // state
+    pub smallest: Option<Path>,
+    pub paths: Vec<Path>,
 }
 
 impl BeamPathGenerator {
@@ -45,7 +46,7 @@ impl BeamPathGenerator {
         self.smallest
     }
 
-    fn expand(&mut self) {
+    pub fn expand(&mut self) {
         self.paths = self
             .paths
             .iter()
@@ -54,7 +55,7 @@ impl BeamPathGenerator {
                 if let Ok(new_path) = path.with_angle(angle) {
                     if (!self.trim_larger || new_path.value() <= self.target)
                         && (self.allow_fractions || new_path.value().is_integer())
-                        && new_path.bounds().fits_in(self.bounds)
+                        && new_path.should_replace(&self.smallest)
                     {
                         return Some(new_path);
                     }
@@ -64,26 +65,25 @@ impl BeamPathGenerator {
             .collect();
     }
 
-    fn filter_by_key<F, K>(&mut self, paths: &mut Vec<Path>, f: F)
+    fn filter_by_key<F, K>(&mut self, new_paths: &mut Vec<Path>, f: F)
     where
         F: FnMut(&Path) -> K,
         K: Ord,
     {
-        paths.sort_by_key(f);
+        // put the best values at the start of paths
+        new_paths.sort_unstable_by_key(f);
 
-        if self.carryover > paths.len() {
-            self.paths.append(paths);
+        if new_paths.len() <= self.carryover {
+            // just move everything out of new_paths
+            self.paths.append(new_paths);
         } else {
-            let rest = paths.split_off(self.carryover);
-            self.paths.append(paths);
-            paths.extend(rest);
+            // move the first self.carryover paths from new_paths to self.paths
+            self.paths.extend(new_paths.drain(..self.carryover));
         }
     }
 
-    fn trim_to_best(&mut self) {
-        let mut rest = Vec::new();
-        mem::swap(&mut rest, &mut self.paths);
-
+    pub fn trim_to_best(&mut self) {
+        let mut rest: Vec<_> = self.paths.drain(..).collect();
         let target = self.target;
 
         self.filter_by_key(&mut rest, |path| path.len()); // shortest
@@ -91,16 +91,16 @@ impl BeamPathGenerator {
         self.filter_by_key(&mut rest, |path| path.num_points()); // fewest points
     }
 
-    fn update_smallest(&mut self) {
-        let mut rest = Vec::new();
-        mem::swap(&mut self.paths, &mut rest);
-
-        for path in rest {
+    pub fn update_smallest(&mut self) {
+        self.paths.retain(|path| {
             if path.value() != self.target {
-                self.paths.push(path);
-            } else if path.should_replace(&self.smallest) {
-                self.smallest = Some(path);
+                return true;
             }
-        }
+            if path.should_replace(&self.smallest) {
+                // even if it's not optimized away, this clone should be fine because it's very infrequent
+                self.smallest = Some(path.clone());
+            }
+            false
+        });
     }
 }

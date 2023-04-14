@@ -1,11 +1,12 @@
 mod errors;
 mod hex_math;
 mod numgen;
+mod threadpool;
 mod traits;
 mod utils;
 
 use num_rational::Ratio;
-use numgen::{AStarPathGenerator, BeamPathGenerator};
+use numgen::{AStarPathGenerator, BeamParallelPoolPathGenerator, BeamPathGenerator};
 use pyo3::prelude::*;
 
 pub use hex_math::Direction;
@@ -53,8 +54,14 @@ pub fn generate_number_pattern_beam(
     carryover: usize,
     trim_larger: bool,
     allow_fractions: bool,
+    num_threads: Option<usize>,
 ) -> Option<GeneratedNumber> {
-    let path = BeamPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions).run()?;
+    let generator = BeamPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions);
+    let path = match num_threads {
+        Some(n) => BeamParallelPoolPathGenerator::new(generator, n).run(),
+        None => generator.run(),
+    }?;
+
     Some(GeneratedNumber {
         direction: path.starting_direction().to_string(),
         pattern: path.pattern(),
@@ -88,6 +95,7 @@ fn generate_number_pattern_beam_py(
     carryover: Option<usize>,
     trim_larger: Option<bool>,
     allow_fractions: Option<bool>,
+    num_threads: Option<usize>,
 ) -> Option<GeneratedNumber> {
     generate_number_pattern_beam(
         target.into(),
@@ -95,6 +103,7 @@ fn generate_number_pattern_beam_py(
         carryover.unwrap_or(25),
         trim_larger.unwrap_or(true),
         allow_fractions.unwrap_or(false),
+        num_threads,
     )
 }
 

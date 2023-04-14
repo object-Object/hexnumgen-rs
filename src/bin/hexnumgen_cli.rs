@@ -42,44 +42,48 @@ impl FromStr for ParsedRatio {
 
 #[derive(Parser)]
 struct Cli {
-    /// Target number to generate a literal for
+    /// Target number to generate a literal for.
     target: ParsedRatio,
 
-    /// Whether to make the target negative
+    /// Whether to make the target negative.
     #[arg(short, long)]
     negative: bool,
 
-    /// Whether to use the A* algorithm instead of beam search
+    /// Whether to use the A* algorithm instead of beam search.
     #[arg(short, long)]
     astar: bool,
 
-    /// Maximum size of the generated pattern (overridden by q_size, r_size, and/or s_size if set)
+    /// Maximum size of the generated pattern (overridden by q_size, r_size, and/or s_size if set).
     #[arg(long, default_value_t = 8)]
     size: u32,
 
-    /// Maximum size of the generated pattern in the q direction (northeast/southwest)
+    /// Maximum size of the generated pattern in the q direction (northeast/southwest).
     #[arg(short, long)]
     q_size: Option<u32>,
 
-    /// Maximum size of the generated pattern in the r direction (north/south)
+    /// Maximum size of the generated pattern in the r direction (north/south).
     #[arg(short, long)]
     r_size: Option<u32>,
 
-    /// Maximum size of the generated pattern in the s direction (northwest/southeast)
+    /// Maximum size of the generated pattern in the s direction (northwest/southeast).
     #[arg(short, long)]
     s_size: Option<u32>,
 
-    /// Number of possible paths kept between steps
+    /// Number of possible paths kept between steps when using beam search.
     #[arg(short, long, default_value_t = 25)]
     carryover: usize,
 
-    /// Whether generated paths larger than the target value should be kept or discarded (generates slower but may give better results)
+    /// Whether generated paths larger than the target value should be kept or discarded. With this option, paths generate slower but may be more compact.
     #[arg(short, long)]
     keep_larger: bool,
 
-    /// If fractional targets and intermediate values should be allowed
+    /// If fractional targets and intermediate values should be allowed.
     #[arg(short, long, default_value_t = false)]
     fractions: bool,
+
+    /// The number of threads to use during the search. If omitted, sequential algorithms will be used.
+    #[arg(short, long)]
+    threads: Option<usize>,
 }
 
 fn main() -> Result<(), String> {
@@ -96,7 +100,7 @@ fn main() -> Result<(), String> {
     let GeneratedNumber { direction, pattern, .. } = if cli.astar {
         generate_number_pattern_astar(target, !cli.keep_larger, cli.fractions)
     } else {
-        generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger, cli.fractions)
+        generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger, cli.fractions, cli.threads)
     }
     .ok_or_else(|| format!("No pattern found for {target}"))?;
 
