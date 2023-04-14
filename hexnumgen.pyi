@@ -26,7 +26,7 @@ class BeamSplitOptions:
 class AStarOptions:
     def __init__(self) -> None: ...
 
-def generate_number_pattern_beam(
+def generate_number_pattern(
     target: int | tuple[int, int],
     trim_larger: bool,
     allow_fractions: bool,

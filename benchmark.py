@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from hexnumgen import generate_number_pattern_astar, generate_number_pattern_beam, GeneratedNumber
+from hexnumgen import generate_number_pattern, GeneratedNumber, AStarOptions, BeamOptions, Bounds
 
 def beam_worker(n: int) -> tuple[float, int | None, int | None]:
     if n % 10 == 0:
         print(n)
 
     start = timer()
-    number = generate_number_pattern_beam(n, 6, 5, 6, 25, True)
+    number = generate_number_pattern(n, True, False, BeamOptions(Bounds(6, 5, 6), 25))
     end = timer() - start
 
     if number is None:
@@ -24,7 +24,7 @@ def astar_worker(n: int) -> tuple[float, int | None, int | None]:
         print(n)
 
     start = timer()
-    number = generate_number_pattern_astar(n, False)
+    number = generate_number_pattern(n, True, False, AStarOptions())
     end = timer() - start
 
     if number is None:
