@@ -55,6 +55,7 @@ impl BeamPathGenerator {
                 if let Ok(new_path) = path.with_angle(angle) {
                     if (!self.trim_larger || new_path.value() <= self.target)
                         && (self.allow_fractions || new_path.value().is_integer())
+                        && new_path.bounds().fits_in(self.bounds)
                         && new_path.should_replace(&self.smallest)
                     {
                         return Some(new_path);

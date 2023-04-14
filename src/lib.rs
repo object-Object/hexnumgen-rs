@@ -6,7 +6,7 @@ mod traits;
 mod utils;
 
 use num_rational::Ratio;
-use numgen::{AStarPathGenerator, BeamParallelPoolPathGenerator, BeamPathGenerator};
+use numgen::{AStarPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator};
 use pyo3::prelude::*;
 
 pub use hex_math::Direction;
@@ -58,9 +58,13 @@ pub fn generate_number_pattern_beam(
 ) -> Option<GeneratedNumber> {
     let generator = BeamPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions);
     let path = match num_threads {
-        Some(n) => BeamParallelPoolPathGenerator::new(generator, n).run(),
+        Some(n) => {
+            BeamParallelSplitPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions, n).run()
+            // BeamParallelPoolPathGenerator::new(generator, n).run()
+        }
         None => generator.run(),
     }?;
+    println!("{}", path.bounds().quasi_area());
 
     Some(GeneratedNumber {
         direction: path.starting_direction().to_string(),
