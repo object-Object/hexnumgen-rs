@@ -3,26 +3,54 @@ use crate::{
     numgen::{Bounds, Path},
     traits::{AbsDiffRatio, UnsignedAbsRatio},
 };
+use clap::Args;
 use itertools::Itertools;
 use num_rational::Ratio;
 use num_traits::Zero;
+use pyo3::prelude::*;
 use strum::IntoEnumIterator;
+
+use super::PathGenerator;
+
+#[pyclass]
+#[derive(Clone, Copy, Args)]
+pub struct BeamOptions {
+    #[command(flatten)]
+    pub bounds: Bounds,
+    #[arg(short, long, default_value_t = 25)]
+    pub carryover: usize,
+}
+
+#[pymethods]
+impl BeamOptions {
+    #[new]
+    fn new(bounds: Bounds, carryover: usize) -> Self {
+        Self { bounds, carryover }
+    }
+}
 
 pub struct BeamPathGenerator {
     // params
     pub target: Ratio<u64>,
-    pub bounds: Bounds,
-    pub carryover: usize,
     pub trim_larger: bool,
     pub allow_fractions: bool,
+    pub bounds: Bounds,
+    pub carryover: usize,
 
     // state
     pub smallest: Option<Path>,
     pub paths: Vec<Path>,
 }
 
-impl BeamPathGenerator {
-    pub fn new(target: Ratio<i64>, bounds: Bounds, carryover: usize, trim_larger: bool, allow_fractions: bool) -> Self {
+impl PathGenerator for BeamPathGenerator {
+    type Opts = BeamOptions;
+
+    fn new(
+        target: Ratio<i64>,
+        trim_larger: bool,
+        allow_fractions: bool,
+        Self::Opts { bounds, carryover }: Self::Opts,
+    ) -> Self {
         Self {
             target: target.unsigned_abs(),
             bounds,
@@ -34,7 +62,7 @@ impl BeamPathGenerator {
         }
     }
 
-    pub fn run(mut self) -> Option<Path> {
+    fn run(mut self) -> Option<Path> {
         if self.target.is_zero() {
             return Some(self.paths[0].clone());
         }
@@ -45,7 +73,9 @@ impl BeamPathGenerator {
         }
         self.smallest
     }
+}
 
+impl BeamPathGenerator {
     pub fn expand(&mut self) {
         self.paths = self
             .paths

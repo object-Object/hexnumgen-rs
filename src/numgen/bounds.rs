@@ -1,15 +1,26 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use clap::Args;
+use pyo3::prelude::*;
+
+#[pyclass]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Args)]
 pub struct Bounds {
+    #[arg(short, long = "q_size", default_value_t = 8)]
     q: u32,
+    #[arg(short, long = "r_size", default_value_t = 8)]
     r: u32,
+    #[arg(short, long = "s_size", default_value_t = 8)]
     s: u32,
 }
 
+#[pymethods]
 impl Bounds {
+    #[new]
     pub fn new(q: u32, r: u32, s: u32) -> Self {
         Self { q, r, s }
     }
+}
 
+impl Bounds {
     pub fn quasi_area(&self) -> u32 {
         self.q * self.r * self.s
     }

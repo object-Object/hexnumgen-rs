@@ -6,11 +6,33 @@ use crate::{
     traits::{AbsDiffRatio, RwLockWriteIf, UnsignedAbsRatio},
     utils::{drain_every_other, CondvarAny},
 };
+use clap::Args;
 use itertools::Itertools;
 use num_rational::Ratio;
 use num_traits::Zero;
 use parking_lot::RwLock;
+use pyo3::prelude::*;
 use strum::IntoEnumIterator;
+
+use super::PathGenerator;
+
+#[pyclass]
+#[derive(Clone, Copy, Args)]
+pub struct BeamSplitOptions {
+    #[command(flatten)]
+    pub bounds: Bounds,
+    #[arg(short, long, default_value_t = 25)]
+    pub carryover: usize,
+    pub num_threads: usize,
+}
+
+#[pymethods]
+impl BeamSplitOptions {
+    #[new]
+    fn new(bounds: Bounds, carryover: usize, num_threads: usize) -> Self {
+        Self { bounds, carryover, num_threads }
+    }
+}
 
 pub struct BeamParallelSplitPathGenerator {
     // params
@@ -27,14 +49,14 @@ pub struct BeamParallelSplitPathGenerator {
     paths: Vec<Path>,
 }
 
-impl BeamParallelSplitPathGenerator {
-    pub fn new(
+impl PathGenerator for BeamParallelSplitPathGenerator {
+    type Opts = BeamSplitOptions;
+
+    fn new(
         target: Ratio<i64>,
-        bounds: Bounds,
-        carryover: usize,
         trim_larger: bool,
         allow_fractions: bool,
-        num_threads: usize,
+        Self::Opts { bounds, carryover, num_threads }: Self::Opts,
     ) -> Self {
         Self {
             target: target.unsigned_abs(),
@@ -49,7 +71,7 @@ impl BeamParallelSplitPathGenerator {
         }
     }
 
-    pub fn run(mut self) -> Option<Path> {
+    fn run(mut self) -> Option<Path> {
         if self.target.is_zero() {
             return Some(self.paths[0].clone());
         }
@@ -59,7 +81,9 @@ impl BeamParallelSplitPathGenerator {
         self.wait_until_done();
         self.smallest.read().clone()
     }
+}
 
+impl BeamParallelSplitPathGenerator {
     fn do_search(&mut self) {
         while !self.paths.is_empty() {
             self.expand();

@@ -1,5 +1,7 @@
+use clap::Args;
 use num_rational::Ratio;
 use num_traits::Zero;
+use pyo3::prelude::*;
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -11,6 +13,20 @@ use crate::{
 
 use std::collections::BinaryHeap;
 
+use super::PathGenerator;
+
+#[pyclass]
+#[derive(Clone, Copy, Args)]
+pub struct AStarOptions {}
+
+#[pymethods]
+impl AStarOptions {
+    #[new]
+    fn new() -> Self {
+        Self {}
+    }
+}
+
 pub struct AStarPathGenerator {
     target: Ratio<u64>,
     trim_larger: bool,
@@ -19,8 +35,10 @@ pub struct AStarPathGenerator {
     frontier: BinaryHeap<QueuedPath>,
 }
 
-impl AStarPathGenerator {
-    pub fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool) -> Self {
+impl PathGenerator for AStarPathGenerator {
+    type Opts = AStarOptions;
+
+    fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, _: AStarOptions) -> Self {
         let mut gen = Self {
             target: target.unsigned_abs(),
             trim_larger,
@@ -32,7 +50,7 @@ impl AStarPathGenerator {
         gen
     }
 
-    pub fn run(mut self) -> Option<Path> {
+    fn run(mut self) -> Option<Path> {
         if self.target.is_zero() {
             return self.frontier.pop().map(Into::into);
         }
@@ -63,7 +81,9 @@ impl AStarPathGenerator {
 
         self.smallest
     }
+}
 
+impl AStarPathGenerator {
     /// Returns true if there are valid solutions in the new frontier
     fn update_frontier(&mut self) -> bool {
         let path = self.frontier.pop().unwrap().path;

@@ -5,12 +5,16 @@ mod threadpool;
 mod traits;
 mod utils;
 
+use clap::Subcommand;
 use num_rational::Ratio;
-use numgen::{AStarPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator};
+use numgen::{
+    AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator, Path,
+    PathGenerator,
+};
 use pyo3::prelude::*;
 
 pub use hex_math::Direction;
-pub use numgen::Bounds;
+pub use numgen::{AStarOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions, Bounds};
 
 #[derive(FromPyObject)]
 pub enum PyRatio {
@@ -27,6 +31,15 @@ impl From<PyRatio> for Ratio<i64> {
             PyRatio::Tuple(numer, denom) => Ratio::new(numer, denom),
         }
     }
+}
+
+#[derive(FromPyObject, Subcommand)]
+pub enum GeneratorOptions {
+    Beam(BeamOptions),
+    BeamPool(BeamPoolOptions),
+    BeamSplit(BeamSplitOptions),
+    #[command(name = "astar")]
+    AStar(AStarOptions),
 }
 
 #[pyclass]
@@ -48,83 +61,56 @@ impl GeneratedNumber {
     }
 }
 
-pub fn generate_number_pattern_beam(
-    target: Ratio<i64>,
-    bounds: Bounds,
-    carryover: usize,
-    trim_larger: bool,
-    allow_fractions: bool,
-    num_threads: Option<usize>,
-) -> Option<GeneratedNumber> {
-    let generator = BeamPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions);
-    let path = match num_threads {
-        Some(n) => {
-            BeamParallelSplitPathGenerator::new(target, bounds, carryover, trim_larger, allow_fractions, n).run()
-            // BeamParallelPoolPathGenerator::new(generator, n).run()
+impl From<Path> for GeneratedNumber {
+    fn from(path: Path) -> Self {
+        Self {
+            direction: path.starting_direction().to_string(),
+            pattern: path.pattern(),
+            largest_dimension: path.bounds().largest_dimension(),
+            num_points: path.num_points(),
         }
-        None => generator.run(),
-    }?;
-    println!("{}", path.bounds().quasi_area());
-
-    Some(GeneratedNumber {
-        direction: path.starting_direction().to_string(),
-        pattern: path.pattern(),
-        largest_dimension: path.bounds().largest_dimension(),
-        num_points: path.num_points(),
-    })
+    }
 }
 
-pub fn generate_number_pattern_astar(
+pub fn generate_number_pattern(
     target: Ratio<i64>,
     trim_larger: bool,
     allow_fractions: bool,
+    options: GeneratorOptions,
 ) -> Option<GeneratedNumber> {
-    let path = AStarPathGenerator::new(target, trim_larger, allow_fractions).run()?;
-    Some(GeneratedNumber {
-        direction: path.starting_direction().to_string(),
-        pattern: path.pattern(),
-        largest_dimension: path.bounds().largest_dimension(),
-        num_points: path.num_points(),
-    })
+    // TODO: fix these types. ew
+    match options {
+        GeneratorOptions::Beam(opts) => BeamPathGenerator::new(target, trim_larger, allow_fractions, opts).run(),
+        GeneratorOptions::BeamPool(opts) => {
+            BeamParallelPoolPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
+        }
+        GeneratorOptions::BeamSplit(opts) => {
+            BeamParallelSplitPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
+        }
+        GeneratorOptions::AStar(opts) => AStarPathGenerator::new(target, trim_larger, allow_fractions, opts).run(),
+    }
+    .map(Into::into)
 }
 
 #[pyfunction]
-#[pyo3(name = "generate_number_pattern_beam")]
-#[allow(clippy::too_many_arguments)]
-fn generate_number_pattern_beam_py(
+#[pyo3(name = "generate_number_pattern")]
+fn generate_number_pattern_py(
     target: PyRatio,
-    q_size: Option<u32>,
-    r_size: Option<u32>,
-    s_size: Option<u32>,
-    carryover: Option<usize>,
-    trim_larger: Option<bool>,
-    allow_fractions: Option<bool>,
-    num_threads: Option<usize>,
+    trim_larger: bool,
+    allow_fractions: bool,
+    options: GeneratorOptions,
 ) -> Option<GeneratedNumber> {
-    generate_number_pattern_beam(
-        target.into(),
-        Bounds::new(q_size.unwrap_or(8), r_size.unwrap_or(8), s_size.unwrap_or(8)),
-        carryover.unwrap_or(25),
-        trim_larger.unwrap_or(true),
-        allow_fractions.unwrap_or(false),
-        num_threads,
-    )
-}
-
-#[pyfunction]
-#[pyo3(name = "generate_number_pattern_astar")]
-fn generate_number_pattern_astar_py(
-    target: PyRatio,
-    trim_larger: Option<bool>,
-    allow_fractions: Option<bool>,
-) -> Option<GeneratedNumber> {
-    generate_number_pattern_astar(target.into(), trim_larger.unwrap_or(true), allow_fractions.unwrap_or(false))
+    generate_number_pattern(target.into(), trim_larger, allow_fractions, options)
 }
 
 #[pymodule]
 fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(generate_number_pattern_beam_py, m)?)?;
-    m.add_function(wrap_pyfunction!(generate_number_pattern_astar_py, m)?)?;
+    m.add_function(wrap_pyfunction!(generate_number_pattern_py, m)?)?;
     m.add_class::<GeneratedNumber>()?;
+    m.add_class::<Bounds>()?;
+    m.add_class::<BeamOptions>()?;
+    m.add_class::<BeamPoolOptions>()?;
+    m.add_class::<BeamSplitOptions>()?;
+    m.add_class::<AStarOptions>()?;
     Ok(())
 }

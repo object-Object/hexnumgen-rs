@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Error;
 use clap::Parser;
-use hexnumgen::{generate_number_pattern_astar, generate_number_pattern_beam, Bounds, GeneratedNumber};
+use hexnumgen::{generate_number_pattern, GeneratedNumber, GeneratorOptions};
 use num_rational::Ratio;
 
 #[derive(Clone)]
@@ -42,48 +42,23 @@ impl FromStr for ParsedRatio {
 
 #[derive(Parser)]
 struct Cli {
-    /// Target number to generate a literal for.
+    /// Target number to generate a literal for
     target: ParsedRatio,
 
-    /// Whether to make the target negative.
+    /// Whether to make the target negative
     #[arg(short, long)]
     negative: bool,
 
-    /// Whether to use the A* algorithm instead of beam search.
-    #[arg(short, long)]
-    astar: bool,
-
-    /// Maximum size of the generated pattern (overridden by q_size, r_size, and/or s_size if set).
-    #[arg(long, default_value_t = 8)]
-    size: u32,
-
-    /// Maximum size of the generated pattern in the q direction (northeast/southwest).
-    #[arg(short, long)]
-    q_size: Option<u32>,
-
-    /// Maximum size of the generated pattern in the r direction (north/south).
-    #[arg(short, long)]
-    r_size: Option<u32>,
-
-    /// Maximum size of the generated pattern in the s direction (northwest/southeast).
-    #[arg(short, long)]
-    s_size: Option<u32>,
-
-    /// Number of possible paths kept between steps when using beam search.
-    #[arg(short, long, default_value_t = 25)]
-    carryover: usize,
-
-    /// Whether generated paths larger than the target value should be kept or discarded. With this option, paths generate slower but may be more compact.
+    /// Whether generated paths larger than the target value should be kept or discarded (paths generate slower but may be more compact)
     #[arg(short, long)]
     keep_larger: bool,
 
-    /// If fractional targets and intermediate values should be allowed.
+    /// If fractional targets and intermediate values should be allowed
     #[arg(short, long, default_value_t = false)]
     fractions: bool,
 
-    /// The number of threads to use during the search. If omitted, sequential algorithms will be used.
-    #[arg(short, long)]
-    threads: Option<usize>,
+    #[command(subcommand)]
+    options: GeneratorOptions,
 }
 
 fn main() -> Result<(), String> {
@@ -94,15 +69,9 @@ fn main() -> Result<(), String> {
         return Err("Tried to generate non-integer number without enabling fractions".into());
     }
 
-    let bounds =
-        Bounds::new(cli.q_size.unwrap_or(cli.size), cli.r_size.unwrap_or(cli.size), cli.s_size.unwrap_or(cli.size));
-
-    let GeneratedNumber { direction, pattern, .. } = if cli.astar {
-        generate_number_pattern_astar(target, !cli.keep_larger, cli.fractions)
-    } else {
-        generate_number_pattern_beam(target, bounds, cli.carryover, !cli.keep_larger, cli.fractions, cli.threads)
-    }
-    .ok_or_else(|| format!("No pattern found for {target}"))?;
+    let GeneratedNumber { direction, pattern, .. } =
+        generate_number_pattern(target, !cli.keep_larger, cli.fractions, cli.options)
+            .ok_or_else(|| format!("No pattern found for {target}"))?;
 
     println!("{direction} {pattern}");
     Ok(())

@@ -6,7 +6,8 @@ mod queued_path;
 
 pub use bounds::Bounds;
 pub use generators::{
-    AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator,
+    AStarOptions, AStarPathGenerator, BeamOptions, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator,
+    BeamPathGenerator, BeamPoolOptions, BeamSplitOptions, PathGenerator,
 };
 pub use minmax::MinMax;
 pub use path::Path;

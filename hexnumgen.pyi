@@ -11,19 +11,24 @@ class GeneratedNumber:
     @property
     def num_points(self) -> int: ...
 
+class Bounds:
+    def __init__(self, q: int, r: int, s: int) -> None: ...
+
+class BeamOptions:
+    def __init__(self, bounds: Bounds, carryover: int) -> None: ...
+
+class BeamPoolOptions:
+    def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
+
+class BeamSplitOptions:
+    def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
+
+class AStarOptions:
+    def __init__(self) -> None: ...
+
 def generate_number_pattern_beam(
     target: int | tuple[int, int],
-    q_size: int = 8,
-    r_size: int = 8,
-    s_size: int = 8,
-    carryover: int = 25,
-    trim_larger: bool = True,
-    allow_fractions: bool = False,
-    num_threads: int | None = None,
-) -> GeneratedNumber | None: ...
-
-def generate_number_pattern_astar(
-    target: int | tuple[int, int],
-    trim_larger: bool = True,
-    allow_fractions: bool = False,
+    trim_larger: bool,
+    allow_fractions: bool,
+    options: BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions,
 ) -> GeneratedNumber | None: ...

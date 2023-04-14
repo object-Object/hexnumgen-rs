@@ -1,5 +1,5 @@
 use clap::Parser;
-use hexnumgen::{generate_number_pattern_astar, generate_number_pattern_beam, Direction, GeneratedNumber};
+use hexnumgen::{generate_number_pattern, AStarOptions, Direction, GeneratedNumber};
 use num_traits::Zero;
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
@@ -30,8 +30,8 @@ fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, (String, String)> {
         println!("{}/{}", i + 1, targets.len());
 
         let GeneratedNumber { direction, pattern, .. } =
-            generate_number_pattern_astar(target.into(), false, false).unwrap();
-        // generate_number_pattern_beam(target.into(), 8.into(), 100, false, false, None).unwrap();
+            generate_number_pattern(target.into(), false, false, hexnumgen::GeneratorOptions::AStar(AStarOptions {}))
+                .unwrap();
 
         if !target.is_zero() {
             let negative_pattern = re.replace(&pattern, "dedd").to_string();
