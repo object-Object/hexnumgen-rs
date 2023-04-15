@@ -17,7 +17,7 @@ def beam_worker(n: int) -> tuple[float, int | None, int | None]:
 
     if number is None:
         return end, None, None
-    return end, number.num_points, number.largest_dimension
+    return end, number.num_points, number.bounds.largest_dimension
 
 def astar_worker(n: int) -> tuple[float, int | None, int | None]:
     if n % 10 == 0:
@@ -29,7 +29,7 @@ def astar_worker(n: int) -> tuple[float, int | None, int | None]:
 
     if number is None:
         return end, None, None
-    return end, number.num_points, number.largest_dimension
+    return end, number.num_points, number.bounds.largest_dimension
 
 def moving_average(data: list | tuple, n: int) -> list:
     return list(pd.Series(data).rolling(window=n).mean().values)
@@ -39,7 +39,7 @@ def nanmax(data: list | tuple) -> float:
 
 if __name__ == "__main__":
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 2)
-    numbers = range(2001)
+    numbers = range(1001)
 
     # beam_times, beam_points, beam_sizes = zip(*pool.map(beam_worker, numbers))
     astar_times, astar_points, astar_sizes = zip(*pool.map(astar_worker, numbers, chunksize=32))

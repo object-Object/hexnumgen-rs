@@ -49,7 +49,7 @@ pub struct GeneratedNumber {
     #[pyo3(get)]
     pub pattern: String,
     #[pyo3(get)]
-    pub largest_dimension: u32,
+    pub bounds: Bounds,
     #[pyo3(get)]
     pub num_points: usize,
 }
@@ -66,7 +66,7 @@ impl From<Path> for GeneratedNumber {
         Self {
             direction: path.starting_direction().to_string(),
             pattern: path.pattern(),
-            largest_dimension: path.bounds().largest_dimension(),
+            bounds: path.bounds(),
             num_points: path.num_points(),
         }
     }
