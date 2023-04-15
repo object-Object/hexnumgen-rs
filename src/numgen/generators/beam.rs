@@ -12,7 +12,7 @@ use strum::IntoEnumIterator;
 
 use super::PathGenerator;
 
-#[pyclass]
+#[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
 pub struct BeamOptions {
     #[command(flatten)]

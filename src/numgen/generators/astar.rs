@@ -15,7 +15,7 @@ use std::collections::BinaryHeap;
 
 use super::PathGenerator;
 
-#[pyclass]
+#[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
 pub struct AStarOptions {}
 

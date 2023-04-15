@@ -1,16 +1,13 @@
 use clap::Args;
 use pyo3::prelude::*;
 
-#[pyclass]
+#[pyclass(get_all, set_all)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Args)]
 pub struct Bounds {
-    #[pyo3(get)]
     #[arg(short, long = "q_size", default_value_t = 8)]
     q: u32,
-    #[pyo3(get)]
     #[arg(short, long = "r_size", default_value_t = 8)]
     r: u32,
-    #[pyo3(get)]
     #[arg(short, long = "s_size", default_value_t = 8)]
     s: u32,
 }

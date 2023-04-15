@@ -42,16 +42,13 @@ pub enum GeneratorOptions {
     AStar(AStarOptions),
 }
 
-#[pyclass]
+#[pyclass(get_all)]
 pub struct GeneratedNumber {
-    #[pyo3(get)]
     pub direction: String,
-    #[pyo3(get)]
     pub pattern: String,
-    #[pyo3(get)]
     pub bounds: Bounds,
-    #[pyo3(get)]
     pub num_points: usize,
+    pub num_segments: usize,
 }
 
 #[pymethods]
@@ -68,6 +65,7 @@ impl From<Path> for GeneratedNumber {
             pattern: path.pattern(),
             bounds: path.bounds(),
             num_points: path.num_points(),
+            num_segments: path.len(),
         }
     }
 }

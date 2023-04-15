@@ -10,7 +10,7 @@ use crate::{hex_math::Angle, numgen::Path, threadpool::ThreadPool, traits::Unsig
 
 use super::{BeamOptions, BeamPathGenerator, PathGenerator};
 
-#[pyclass]
+#[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
 pub struct BeamPoolOptions {
     #[command(flatten)]

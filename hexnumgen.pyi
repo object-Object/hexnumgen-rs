@@ -1,41 +1,40 @@
 class Bounds:
+    q: int
+    r: int
+    s: int
     def __init__(self, q: int, r: int, s: int) -> None: ...
-
-    @property
-    def q(self) -> int: ...
-
-    @property
-    def r(self) -> int: ...
-
-    @property
-    def s(self) -> int: ...
-
     @property
     def largest_dimension(self) -> int: ...
-
     @property
     def quasi_area(self) -> int: ...
 
 class GeneratedNumber:
     @property
     def direction(self) -> str: ...
-
     @property
     def pattern(self) -> str: ...
-
     @property
     def bounds(self) -> Bounds: ...
-    
     @property
     def num_points(self) -> int: ...
+    @property
+    def num_segments(self) -> int: ...
 
 class BeamOptions:
+    bounds: Bounds
+    carryover: int
     def __init__(self, bounds: Bounds, carryover: int) -> None: ...
 
 class BeamPoolOptions:
+    bounds: Bounds
+    carryover: int
+    num_threads: int
     def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
 
 class BeamSplitOptions:
+    bounds: Bounds
+    carryover: int
+    num_threads: int
     def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
 
 class AStarOptions:

@@ -16,7 +16,7 @@ use strum::IntoEnumIterator;
 
 use super::PathGenerator;
 
-#[pyclass]
+#[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
 pub struct BeamSplitOptions {
     #[command(flatten)]
@@ -103,7 +103,6 @@ impl BeamParallelSplitPathGenerator {
     }
 
     fn split(&mut self) {
-        // TODO: tweak cutoff for performance
         if self.paths.len() > 1 {
             if let Some(mut free_lock) = self.free_threads.0.write_if(|&f| f > 0) {
                 *free_lock -= 1;
