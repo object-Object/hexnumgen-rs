@@ -1,7 +1,7 @@
 use std::hash::Hash;
 
 use super::{Angle, Coord, Direction};
-use crate::errors::HexError;
+use crate::errors::HexResult;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Segment {
@@ -69,7 +69,7 @@ impl PartialEq for Segment {
 }
 impl Eq for Segment {}
 
-pub fn get_pattern_segments(direction: Direction, pattern: &str) -> Result<Vec<Segment>, HexError> {
+pub fn get_pattern_segments(direction: Direction, pattern: &str) -> HexResult<Vec<Segment>> {
     let mut cursor = Coord::origin();
     let mut compass = direction;
 

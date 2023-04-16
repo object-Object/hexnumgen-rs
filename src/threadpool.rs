@@ -51,7 +51,7 @@ where
         Self { threads, res_rx }
     }
 
-    pub fn map(&mut self, args: Vec<Arg>) -> Vec<Res> {
+    pub fn map_args(&mut self, args: Vec<Arg>) -> impl Iterator<Item = Res> {
         let num_args = args.len();
 
         // send data to threads
@@ -73,6 +73,6 @@ where
         }
 
         // this *should* never panic because every thread should return exactly one value before we get to this point
-        results.into_iter().map(Option::unwrap).collect()
+        results.into_iter().map(Option::unwrap)
     }
 }

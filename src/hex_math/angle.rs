@@ -1,4 +1,4 @@
-use crate::errors::HexError;
+use crate::errors::{HexError, HexResult};
 use num_rational::Ratio;
 use strum::EnumIter;
 
@@ -13,7 +13,7 @@ pub enum Angle {
 }
 
 impl Angle {
-    pub fn apply_to(&self, num: Ratio<u64>) -> Result<Ratio<u64>, HexError> {
+    pub fn apply_to(&self, num: Ratio<u64>) -> HexResult<Ratio<u64>> {
         match self {
             Angle::Forward => Ok(num + 1),
             Angle::Left => Ok(num + 5),

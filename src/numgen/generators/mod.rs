@@ -8,4 +8,4 @@ pub use astar::{AStarOptions, AStarPathGenerator};
 pub use beam::{BeamOptions, BeamPathGenerator};
 pub use beam_parallel_pool::{BeamParallelPoolPathGenerator, BeamPoolOptions};
 pub use beam_parallel_split::{BeamParallelSplitPathGenerator, BeamSplitOptions};
-pub use traits::PathGenerator;
+pub use traits::{BeamSearch, PathGenerator, PathGeneratorRun};

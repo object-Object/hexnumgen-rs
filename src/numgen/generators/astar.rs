@@ -6,14 +6,14 @@ use strum::IntoEnumIterator;
 
 use crate::{
     hex_math::Angle,
-    numgen::{Path, QueuedPath},
-    traits::UnsignedAbsRatio,
+    numgen::{Path, PathLimits, QueuedPath, SharedPath},
+    traits::RwLockWriteIf,
     utils::NonZeroSign,
 };
 
 use std::collections::BinaryHeap;
 
-use super::PathGenerator;
+use super::{traits::PathGeneratorRun, PathGenerator};
 
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
@@ -28,10 +28,11 @@ impl AStarOptions {
 }
 
 pub struct AStarPathGenerator {
-    target: Ratio<u64>,
-    trim_larger: bool,
-    allow_fractions: bool,
-    smallest: Option<Path>,
+    // params
+    limits: PathLimits,
+
+    // state
+    smallest: SharedPath,
     frontier: BinaryHeap<QueuedPath>,
 }
 
@@ -40,57 +41,56 @@ impl PathGenerator for AStarPathGenerator {
 
     fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, _: AStarOptions) -> Self {
         let mut gen = Self {
-            target: target.unsigned_abs(),
-            trim_larger,
-            allow_fractions,
-            smallest: None,
+            limits: PathLimits::unbounded(target, trim_larger, allow_fractions),
+            smallest: SharedPath::default(),
             frontier: BinaryHeap::new(),
         };
         gen.push_path(Path::zero(NonZeroSign::from(target)));
         gen
     }
+}
 
+impl PathGeneratorRun for AStarPathGenerator {
     fn run(mut self) -> Option<Path> {
-        if self.target.is_zero() {
+        if self.target().is_zero() {
             return self.frontier.pop().map(Into::into);
         }
 
         while !self.frontier.is_empty() {
             // i really wish if-let chains were stable
             if self.update_frontier() {
-                if let Some(smallest_in_frontier) = self
+                if let Some(new_smallest) = self
                     .frontier
                     .iter()
                     .map(|qp| &qp.path)
-                    .filter(|path| path.value() == self.target)
+                    .filter(|path| path.value() == self.target())
                     .min_by_key(|path| path.bounds().quasi_area())
                 {
-                    if smallest_in_frontier.should_replace(&self.smallest) {
-                        let smallest = smallest_in_frontier.clone();
-
-                        // i really wish BinaryHeap retain was stable
-                        self.frontier = BinaryHeap::from_iter(
-                            self.frontier.into_iter().filter(|qp| qp.path.bounds().is_better_than(smallest.bounds())),
-                        );
-
-                        self.smallest = Some(smallest);
+                    if let Some(mut smallest_lock) = self.smallest.write_if(|s| new_smallest.should_replace(s)) {
+                        let new_smallest = new_smallest.clone();
+                        self.frontier.retain(|qp| qp.path.bounds().is_better_than(new_smallest.bounds()));
+                        *smallest_lock = Some(new_smallest);
                     }
                 }
             }
         }
 
-        self.smallest
+        self.smallest.write().take()
     }
 }
 
 impl AStarPathGenerator {
+    fn target(&self) -> Ratio<u64> {
+        self.limits.target
+    }
+
     /// Returns true if there are valid solutions in the new frontier
     fn update_frontier(&mut self) -> bool {
         let path = self.frontier.pop().unwrap().path;
         let mut has_valid_solutions = false;
 
         for new_path in self.next_paths(path) {
-            if new_path.value() == self.target {
+            if new_path.value() == self.target() {
                 has_valid_solutions = true;
             }
             self.push_path(new_path);
@@ -100,24 +100,12 @@ impl AStarPathGenerator {
     }
 
     fn next_paths(&self, path: Path) -> Vec<Path> {
-        Angle::iter()
-            .filter_map(|angle| {
-                if let Ok(new_path) = path.with_angle(angle) {
-                    if (!self.trim_larger || new_path.value() <= self.target)
-                        && (self.allow_fractions || new_path.value().is_integer())
-                        && new_path.should_replace(&self.smallest)
-                    {
-                        return Some(new_path);
-                    }
-                }
-                None
-            })
-            .collect()
+        Angle::iter().filter_map(|a| path.try_with_angle(a, self.limits, &self.smallest).ok()).collect()
     }
 
     fn heuristic(&mut self, path: &Path) -> usize {
         let mut val = path.value();
-        let mut target = self.target;
+        let mut target = self.target();
         let mut heuristic = path.len();
 
         if val.is_zero() {

@@ -1,14 +1,16 @@
 use clap::Args;
 use num_rational::Ratio;
-use num_traits::Zero;
-use parking_lot::RwLock;
 use pyo3::prelude::*;
-use std::{mem, sync::Arc};
 use strum::IntoEnumIterator;
 
-use crate::{hex_math::Angle, numgen::Path, threadpool::ThreadPool, traits::UnsignedAbsRatio, Bounds};
+use crate::{
+    hex_math::Angle,
+    numgen::{Path, PathLimits, SharedPath},
+    threadpool::ThreadPool,
+    Bounds,
+};
 
-use super::{BeamOptions, BeamPathGenerator, PathGenerator};
+use super::{BeamOptions, BeamSearch, PathGenerator};
 
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
@@ -35,60 +37,64 @@ impl From<BeamPoolOptions> for BeamOptions {
 }
 
 pub struct BeamParallelPoolPathGenerator {
-    inner: BeamPathGenerator,
+    // params
+    limits: PathLimits,
+    carryover: usize,
+
+    // state
+    smallest: SharedPath,
+    paths: Vec<Path>,
     pool: ThreadPool<Path, Vec<Path>>,
-    pool_smallest: Arc<RwLock<Option<Path>>>,
 }
 
 impl PathGenerator for BeamParallelPoolPathGenerator {
     type Opts = BeamPoolOptions;
 
-    fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, opts: Self::Opts) -> Self {
-        let pool_smallest = Arc::new(RwLock::new(None));
-        let Self::Opts { bounds, num_threads, .. } = opts;
+    fn new(
+        target: Ratio<i64>,
+        trim_larger: bool,
+        allow_fractions: bool,
+        Self::Opts { bounds, carryover, num_threads }: Self::Opts,
+    ) -> Self {
+        let limits = PathLimits::bounded(target, trim_larger, allow_fractions, bounds);
+        let smallest = SharedPath::default();
 
         let pool = {
-            let pool_smallest = pool_smallest.clone();
-            let target = target.unsigned_abs();
+            // make a copy of the rwlock for the threads in the pool to use
+            let smallest = smallest.clone();
 
-            ThreadPool::new(num_threads, move |path: Path| {
-                Angle::iter()
-                    .filter_map(|angle| {
-                        if let Ok(new_path) = path.with_angle(angle) {
-                            if (!trim_larger || new_path.value() <= target)
-                                && (allow_fractions || new_path.value().is_integer())
-                                && new_path.bounds().fits_in(bounds)
-                                && new_path.should_replace(&pool_smallest.read())
-                            {
-                                return Some(new_path);
-                            }
-                        }
-                        None
-                    })
-                    .collect()
+            ThreadPool::new(num_threads, move |p: Path| {
+                Angle::iter().filter_map(|a| p.try_with_angle(a, limits, &smallest).ok()).collect()
             })
         };
 
-        Self { inner: BeamPathGenerator::new(target, trim_larger, allow_fractions, opts.into()), pool, pool_smallest }
-    }
-
-    fn run(mut self) -> Option<Path> {
-        if self.inner.target.is_zero() {
-            return Some(self.inner.paths[0].clone());
-        }
-        while !self.inner.paths.is_empty() {
-            self.expand();
-            self.inner.trim_to_best();
-            self.inner.update_smallest();
-            *self.pool_smallest.write() = self.inner.smallest.clone();
-        }
-        self.inner.smallest
+        Self { limits, carryover, smallest, pool, paths: vec![Path::zero(target.into())] }
     }
 }
 
-impl BeamParallelPoolPathGenerator {
-    pub fn expand(&mut self) {
-        let old_paths = mem::take(&mut self.inner.paths);
-        self.inner.paths = self.pool.map(old_paths).into_iter().flatten().collect();
+impl BeamSearch for BeamParallelPoolPathGenerator {
+    fn limits(&self) -> PathLimits {
+        self.limits
+    }
+
+    fn carryover(&self) -> usize {
+        self.carryover
+    }
+
+    fn smallest(&self) -> &SharedPath {
+        &self.smallest
+    }
+
+    fn paths(&self) -> &Vec<Path> {
+        &self.paths
+    }
+
+    fn paths_mut(&mut self) -> &mut Vec<Path> {
+        &mut self.paths
+    }
+
+    fn expand(&mut self) {
+        let old_paths = self.paths.split_off(0);
+        self.paths.extend(self.pool.map_args(old_paths).flatten());
     }
 }

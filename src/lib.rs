@@ -8,13 +8,19 @@ mod utils;
 use clap::Subcommand;
 use num_rational::Ratio;
 use numgen::{
-    AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator, Path,
-    PathGenerator,
+    generators::{
+        AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator,
+        PathGenerator, PathGeneratorRun,
+    },
+    Path,
 };
 use pyo3::prelude::*;
 
 pub use hex_math::Direction;
-pub use numgen::{AStarOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions, Bounds};
+pub use numgen::{
+    generators::{AStarOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
+    Bounds,
+};
 
 #[derive(FromPyObject)]
 pub enum PyRatio {
