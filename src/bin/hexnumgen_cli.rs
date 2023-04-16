@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Error;
 use clap::Parser;
-use hexnumgen::{generate_number_pattern, GeneratedNumber, GeneratorOptions};
+use hexnumgen::{generate_number_pattern, Bounds, GeneratedNumber, GeneratorOptions};
 use num_rational::Ratio;
 
 #[derive(Clone)]
@@ -69,10 +69,18 @@ fn main() -> Result<(), String> {
         return Err("Tried to generate non-integer number without enabling fractions".into());
     }
 
-    let GeneratedNumber { direction, pattern, .. } =
+    let GeneratedNumber { direction, pattern, bounds, num_points, num_segments } =
         generate_number_pattern(target, !cli.keep_larger, cli.fractions, cli.options)
             .ok_or_else(|| format!("No pattern found for {target}"))?;
 
-    println!("{direction} {pattern}");
+    let Bounds { q, r, s } = bounds;
+    println!(
+        "{direction} {pattern}
+    Points: {num_points}
+  Segments: {num_segments}
+    Bounds: {q}/{r}/{s}
+Quasi-area: {}",
+        bounds.quasi_area()
+    );
     Ok(())
 }

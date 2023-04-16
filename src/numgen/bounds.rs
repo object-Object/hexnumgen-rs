@@ -5,11 +5,11 @@ use pyo3::prelude::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Args)]
 pub struct Bounds {
     #[arg(short, long = "q_size", default_value_t = 8)]
-    q: u32,
+    pub q: u32,
     #[arg(short, long = "r_size", default_value_t = 8)]
-    r: u32,
+    pub r: u32,
     #[arg(short, long = "s_size", default_value_t = 8)]
-    s: u32,
+    pub s: u32,
 }
 
 #[pymethods]
