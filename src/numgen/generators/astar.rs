@@ -56,32 +56,40 @@ impl PathGeneratorRun for AStarPathGenerator {
             return self.frontier.pop().map(Into::into);
         }
 
-        while !self.frontier.is_empty() {
-            // i really wish if-let chains were stable
-            if self.update_frontier() {
-                if let Some(new_smallest) = self
-                    .frontier
-                    .iter()
-                    .map(|qp| &qp.path)
-                    .filter(|path| path.value() == self.target())
-                    .min_by_key(|path| path.bounds().quasi_area())
-                {
-                    if let Some(mut smallest_lock) = self.smallest.write_if(|s| new_smallest.should_replace(s)) {
-                        let new_smallest = new_smallest.clone();
-                        self.frontier.retain(|qp| qp.path.bounds().is_better_than(new_smallest.bounds()));
-                        *smallest_lock = Some(new_smallest);
-                    }
-                }
-            }
-        }
-
-        self.smallest.write().take()
+        self.do_search();
+        self.get_result()
     }
 }
 
 impl AStarPathGenerator {
     fn target(&self) -> Ratio<u64> {
         self.limits.target
+    }
+
+    fn do_search(&mut self) {
+        while !self.frontier.is_empty() {
+            // formatting note: https://github.com/rust-lang/rustfmt/pull/5203
+            if self.update_frontier()
+                && let Some(new_smallest) = self.find_best_in_frontier()
+                && let Some(mut smallest_lock) = self.smallest.write_if(|s| new_smallest.should_replace(s))
+            {
+                let opt = Some(new_smallest.clone());
+                self.frontier.retain(|qp| qp.path.should_replace(&opt));
+                *smallest_lock = opt;
+            }
+        }
+    }
+
+    fn get_result(self) -> Option<Path> {
+        self.smallest.write().take()
+    }
+
+    fn find_best_in_frontier(&self) -> Option<&Path> {
+        self.frontier
+            .iter()
+            .map(|qp| &qp.path)
+            .filter(|path| path.value() == self.target())
+            .min_by_key(|path| path.bounds().quasi_area())
     }
 
     /// Returns true if there are valid solutions in the new frontier

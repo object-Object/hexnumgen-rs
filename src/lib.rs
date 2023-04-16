@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 mod errors;
 mod hex_math;
 mod numgen;
