@@ -3,7 +3,7 @@ use clap::Args;
 use num_rational::Ratio;
 use pyo3::prelude::*;
 
-use super::{BeamSearch, PathGenerator};
+use super::traits::{BeamSearch, PathGenerator};
 
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
@@ -49,6 +49,10 @@ impl PathGenerator for BeamPathGenerator {
             smallest: SharedPath::default(),
             paths: vec![Path::zero(target.into())],
         }
+    }
+
+    fn run(self) -> Option<Path> {
+        BeamSearch::run(self)
     }
 }
 

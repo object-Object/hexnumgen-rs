@@ -10,7 +10,10 @@ use crate::{
     Bounds,
 };
 
-use super::{BeamOptions, BeamSearch, PathGenerator};
+use super::{
+    traits::{BeamSearch, PathGenerator},
+    BeamOptions,
+};
 
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
@@ -64,11 +67,17 @@ impl PathGenerator for BeamParallelPoolPathGenerator {
             let smallest = smallest.clone();
 
             ThreadPool::new(num_threads, move |p: Path| {
-                Angle::iter().filter_map(|a| p.try_with_angle(a, limits, &smallest).ok()).collect()
+                Angle::iter()
+                    .filter_map(|a| p.try_with_angle(a, limits, |n| n.should_replace(&smallest.read())).ok())
+                    .collect()
             })
         };
 
         Self { limits, carryover, smallest, pool, paths: vec![Path::zero(target.into())] }
+    }
+
+    fn run(self) -> Option<Path> {
+        BeamSearch::run(self)
     }
 }
 

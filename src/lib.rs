@@ -11,8 +11,8 @@ use clap::Subcommand;
 use num_rational::Ratio;
 use numgen::{
     generators::{
-        AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator, BeamPathGenerator,
-        PathGenerator, PathGeneratorRun,
+        traits::PathGenerator, AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator,
+        BeamPathGenerator,
     },
     Path,
 };

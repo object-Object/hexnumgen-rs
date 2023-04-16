@@ -9,8 +9,6 @@ use crate::{
     traits::{AbsDiffRatio, RwLockWriteIf},
 };
 
-use super::PathGeneratorRun;
-
 pub trait BeamSearch {
     fn limits(&self) -> PathLimits;
     fn carryover(&self) -> usize;
@@ -20,6 +18,18 @@ pub trait BeamSearch {
 
     fn target(&self) -> Ratio<u64> {
         self.limits().target
+    }
+
+    fn run(mut self) -> Option<Path>
+    where
+        Self: Sized,
+    {
+        if self.target().is_zero() {
+            return self.paths().first().cloned();
+        }
+
+        self.do_search();
+        self.get_result()
     }
 
     fn do_search(&mut self) {
@@ -42,7 +52,7 @@ pub trait BeamSearch {
             .paths()
             .iter()
             .cartesian_product(Angle::iter())
-            .filter_map(|(p, a)| p.try_with_angle(a, self.limits(), self.smallest()).ok())
+            .filter_map(|(p, a)| p.try_with_angle(a, self.limits(), |n| n.should_replace(&self.smallest().read())).ok())
             .collect();
     }
 
@@ -91,19 +101,5 @@ pub trait BeamSearch {
             }
             false // don't keep expanding paths that already reached the target
         });
-    }
-}
-
-impl<T: BeamSearch> PathGeneratorRun for T {
-    fn run(mut self) -> Option<Path>
-    where
-        Self: Sized,
-    {
-        if self.target().is_zero() {
-            return self.paths().first().cloned();
-        }
-
-        self.do_search();
-        self.get_result()
     }
 }

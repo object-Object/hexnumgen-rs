@@ -104,7 +104,10 @@ impl Path {
         }
     }
 
-    pub fn try_with_angle(&self, angle: Angle, limits: PathLimits, smallest: &SharedPath) -> HexResult<Self> {
+    pub fn try_with_angle<F>(&self, angle: Angle, limits: PathLimits, f: F) -> HexResult<Self>
+    where
+        F: FnOnce(&Path) -> bool,
+    {
         // find the value of the new path and check if it's within limits
         let new_value = angle.apply_to(self.value)?;
         limits.test_value(new_value)?;
@@ -126,7 +129,7 @@ impl Path {
 
         // finally, check the new path against the current smallest path (want acquiring the lock to be done as little as possible)
         // with the current should_replace() impl, this could be done before construction, but that may change in the future
-        match new_path.should_replace(&smallest.read()) {
+        match f(&new_path) {
             true => Ok(new_path),
             false => Err(HexError::OutOfLimits),
         }

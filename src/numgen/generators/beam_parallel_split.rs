@@ -10,7 +10,7 @@ use num_rational::Ratio;
 use parking_lot::{Condvar, Mutex, RwLock};
 use pyo3::prelude::*;
 
-use super::{BeamSearch, PathGenerator};
+use super::traits::{BeamSearch, PathGenerator};
 
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Args)]
@@ -61,6 +61,10 @@ impl PathGenerator for BeamParallelSplitPathGenerator {
             free_threads: Arc::new(RwLock::new(num_threads - 1)),
             done: Arc::new((false.into(), Condvar::new())),
         }
+    }
+
+    fn run(self) -> Option<Path> {
+        BeamSearch::run(self)
     }
 }
 
