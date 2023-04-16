@@ -5,22 +5,11 @@ use strum::IntoEnumIterator;
 
 use crate::{
     hex_math::Angle,
-    numgen::{path::PathLimits, Path, SharedPath},
+    numgen::{Path, PathLimits, SharedPath},
     traits::{AbsDiffRatio, RwLockWriteIf},
 };
 
-// TODO: fix these types, again
-pub trait PathGeneratorRun {
-    fn run(self) -> Option<Path>;
-}
-
-pub trait PathGenerator: PathGeneratorRun {
-    type Opts;
-
-    fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, opts: Self::Opts) -> Self
-    where
-        Self: Sized;
-}
+use super::PathGeneratorRun;
 
 pub trait BeamSearch {
     fn limits(&self) -> PathLimits;
@@ -108,7 +97,7 @@ pub trait BeamSearch {
 impl<T: BeamSearch> PathGeneratorRun for T {
     fn run(mut self) -> Option<Path>
     where
-        Self: std::marker::Sized,
+        Self: Sized,
     {
         if self.target().is_zero() {
             return self.paths().first().cloned();
