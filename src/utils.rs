@@ -2,7 +2,6 @@ use itertools::Itertools;
 use num_integer::Integer;
 use num_rational::Ratio;
 use num_traits::Signed;
-use parking_lot::{Condvar, Mutex, RwLockReadGuard};
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -66,22 +65,4 @@ pub fn drain_every_other<T>(items: &mut Vec<T>) -> Vec<T> {
     items.extend(opt_items.into_iter().flatten());
 
     picked
-}
-
-// from https://github.com/Amanieu/parking_lot/issues/165
-#[derive(Default)]
-pub struct CondvarAny {
-    pub c: Condvar,
-    m: Mutex<()>,
-}
-
-impl CondvarAny {
-    pub fn wait<T>(&self, g: &mut RwLockReadGuard<'_, T>) {
-        let guard = self.m.lock();
-        RwLockReadGuard::unlocked(g, || {
-            // Move the guard in so it gets unlocked before we re-lock g
-            let mut guard = guard;
-            self.c.wait(&mut guard);
-        });
-    }
 }

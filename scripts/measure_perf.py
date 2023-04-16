@@ -3,7 +3,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 from typing import TypedDict
 
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from hexnumgen import (
     AStarOptions,
@@ -64,8 +64,8 @@ def get_dump_filename(dump: PerfDump) -> str:
 def measure(out_dir: Path, options: Options):
     dump = create_dump(options)
 
-    print(filename := get_dump_filename(dump))
-    for n in tqdm(range(1001)):
+    filename = get_dump_filename(dump)
+    for n in trange(1001, desc=filename):
         start = timer()
         number = generate_number_pattern(
             target=n,
@@ -99,26 +99,15 @@ if __name__ == "__main__":
 
     optionses: list[Options] = [
         # AStarOptions(),
-        # BeamOptions(bounds, carryover=50),
-        # BeamOptions(bounds, carryover=100),
-        # BeamOptions(bounds, carryover=200),
-        # BeamPoolOptions(bounds, carryover=50, num_threads=2),
-        # BeamPoolOptions(bounds, carryover=100, num_threads=2),
-        # BeamPoolOptions(bounds, carryover=200, num_threads=2),
-        # BeamPoolOptions(bounds, carryover=50, num_threads=4),
-        # BeamPoolOptions(bounds, carryover=100, num_threads=4),
-        # BeamPoolOptions(bounds, carryover=200, num_threads=4),
-        # BeamPoolOptions(bounds, carryover=50, num_threads=8),
-        # BeamPoolOptions(bounds, carryover=100, num_threads=8),
-        # BeamPoolOptions(bounds, carryover=200, num_threads=8),
-        # BeamSplitOptions(bounds, carryover=50, num_threads=4),
-        # BeamSplitOptions(bounds, carryover=100, num_threads=4),
-        # BeamSplitOptions(bounds, carryover=200, num_threads=4),
-        # BeamSplitOptions(bounds, carryover=100, num_threads=8),
-        # BeamSplitOptions(bounds, carryover=200, num_threads=8),
-        # BeamSplitOptions(bounds, carryover=65, num_threads=12),
+        BeamSplitOptions(bounds, carryover=65, num_threads=12),
+        # BeamSplitOptions(bounds, carryover=500, num_threads=10),
     ]
+    for carryover in [50, 100, 200]:
+        optionses.append(BeamOptions(bounds, carryover))
+        for num_threads in [2, 4, 6, 8]:
+            optionses.append(BeamPoolOptions(bounds, carryover, num_threads))
+            optionses.append(BeamSplitOptions(bounds, carryover, num_threads))
 
     (out_dir := Path("out")).mkdir(exist_ok=True)
-    for options in optionses:
+    for options in tqdm(optionses, desc="Total"):
         measure(out_dir, options)
