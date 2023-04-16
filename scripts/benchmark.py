@@ -5,7 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from hexnumgen import generate_number_pattern, GeneratedNumber, AStarOptions, BeamOptions, Bounds
+from hexnumgen import (
+    AStarOptions,
+    BeamOptions,
+    Bounds,
+    GeneratedNumber,
+    generate_number_pattern,
+)
+
 
 def beam_worker(n: int) -> tuple[float, int | None, int | None]:
     if n % 10 == 0:
@@ -19,6 +26,7 @@ def beam_worker(n: int) -> tuple[float, int | None, int | None]:
         return end, None, None
     return end, number.num_points, number.bounds.largest_dimension
 
+
 def astar_worker(n: int) -> tuple[float, int | None, int | None]:
     if n % 10 == 0:
         print(n)
@@ -31,23 +39,28 @@ def astar_worker(n: int) -> tuple[float, int | None, int | None]:
         return end, None, None
     return end, number.num_points, number.bounds.largest_dimension
 
-def moving_average(data: list | tuple, n: int) -> list:
+
+def moving_average(data: list | tuple | pd.Series, n: int) -> list:
     return list(pd.Series(data).rolling(window=n).mean().values)
 
-def nanmax(data: list | tuple) -> float:
+
+def nanmax(data: list | tuple | pd.Series) -> float:
     return np.nanmax(np.array(data, dtype=float))
+
 
 if __name__ == "__main__":
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 2)
     numbers = range(1001)
 
     # beam_times, beam_points, beam_sizes = zip(*pool.map(beam_worker, numbers))
-    astar_times, astar_points, astar_sizes = zip(*pool.map(astar_worker, numbers, chunksize=32))
-    
+    astar_times, astar_points, astar_sizes = zip(
+        *pool.map(astar_worker, numbers, chunksize=32)
+    )
+
     # print(f"Beam failed: {[i for i, time in enumerate(beam_points) if time is None]}")
     print(f"A* failed: {[i for i, time in enumerate(astar_points) if time is None]}")
 
-    colormap = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    colormap = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 

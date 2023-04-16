@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import TypedDict
+from typing import Required, TypedDict
 
 from tqdm import tqdm, trange
 
@@ -17,8 +17,9 @@ from hexnumgen import (
 Options = BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions
 
 
-class PerfDumpItem(TypedDict):
-    time: float
+class PerfDumpItem(TypedDict, total=False):
+    target: Required[int]
+    time: Required[float]
     points: int
     segments: int
     largest_dim: int
@@ -29,7 +30,7 @@ class PerfDump(TypedDict):
     algorithm: str
     carryover: int | None
     num_threads: int | None
-    data: list[PerfDumpItem | float]
+    data: list[PerfDumpItem]
 
 
 def create_dump(options: Options) -> PerfDump:
@@ -75,19 +76,15 @@ def measure(out_dir: Path, options: Options):
         )
         time = timer() - start
 
+        item = PerfDumpItem(target=n, time=time)
         if number is None:
             tqdm.write(f"WARNING: Failed to generate {n}")
-            dump["data"].append(time)
         else:
-            dump["data"].append(
-                PerfDumpItem(
-                    time=time,
-                    points=number.num_points,
-                    segments=number.num_segments,
-                    largest_dim=number.bounds.largest_dimension,
-                    quasi_area=number.bounds.quasi_area,
-                )
-            )
+            item["points"] = number.num_points
+            item["segments"] = number.num_segments
+            item["largest_dim"] = number.bounds.largest_dimension
+            item["quasi_area"] = number.bounds.quasi_area
+        dump["data"].append(item)
 
     out_path = out_dir / filename
     with out_path.open("w") as f:
@@ -98,9 +95,9 @@ if __name__ == "__main__":
     bounds = Bounds(8, 8, 8)
 
     optionses: list[Options] = [
-        # AStarOptions(),
+        AStarOptions(),
         BeamSplitOptions(bounds, carryover=65, num_threads=12),
-        # BeamSplitOptions(bounds, carryover=500, num_threads=10),
+        BeamSplitOptions(bounds, carryover=500, num_threads=10),
     ]
     for carryover in [50, 100, 200]:
         optionses.append(BeamOptions(bounds, carryover))
