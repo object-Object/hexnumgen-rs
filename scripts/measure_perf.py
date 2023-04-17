@@ -109,18 +109,21 @@ if __name__ == "__main__":
     bounds = Bounds(8, 8, 8)
 
     # list of options to generate
+    # note: running this entire list will take a *long* time
     optionses: list[Options] = [
-        AStarOptions(),
-        BeamSplitOptions(bounds, carryover=65, num_threads=12),
-        BeamSplitOptions(bounds, carryover=500, num_threads=10),
+        # AStarOptions(),
+        BeamSplitOptions(bounds, carryover=1000, num_threads=10),
+        # BeamOptions(bounds, 768),
     ]
-    for carryover in [50, 100, 200]:
-        optionses.append(BeamOptions(bounds, carryover))
-        for num_threads in [2, 4, 6, 8]:
-            optionses.append(BeamPoolOptions(bounds, carryover, num_threads))
-            optionses.append(BeamSplitOptions(bounds, carryover, num_threads))
-    for num_threads in [2, 4, 6, 8]:
-        optionses.append(AStarSplitOptions(num_threads))
+    # for carryover in [50, 100, 200]:
+    #     optionses.append(BeamOptions(bounds, carryover))
+    #     for num_threads in [2, 4, 6, 8]:
+    #         optionses.append(BeamPoolOptions(bounds, carryover, num_threads))
+    #         optionses.append(BeamSplitOptions(bounds, carryover, num_threads))
+    # for num_threads in [2, 4, 6, 8]:
+    #     optionses.append(BeamSplitOptions(bounds, 768 // num_threads, num_threads))
+    # for num_threads in [2, 4, 6, 8]:
+    #     optionses.append(AStarSplitOptions(num_threads))
 
     # actually generate the patterns
     trim_larger = True

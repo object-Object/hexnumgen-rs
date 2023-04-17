@@ -1,20 +1,12 @@
 import json
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-from benchmark import moving_average, nanmax
 from matplotlib.axes import Axes
 from measure_perf import PerfDump
 
 DfDump = tuple[str, pd.DataFrame]
-
-_colormap: list[str] = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-_index = 0
-
-
-def plot_moving_average(ax: Axes, label: str, data: list | pd.Series, n: int):
-    ax.plot(moving_average(data, n), label=label)
-    ax.axhline(nanmax(data), linestyle="--", color=_colormap[_index])
 
 
 def get_dump_label(dump: PerfDump) -> str:
@@ -49,20 +41,11 @@ def plot_series(
     label: str,
     df: pd.DataFrame,
 ):
-    global _index
     if time_ax:
         time_ax.plot(df.time, label=label)
-
     segments_ax.plot(df.segments, label=label)
-    # plot_moving_average(segments_ax, label, df.segments, 3)
-
     largest_dim_ax.plot(df.largest_dim, label=label)
-    # plot_moving_average(largest_dim_ax, label, df.largest_dim, 5)
-
     quasi_area_ax.plot(df.quasi_area, label=label)
-    # plot_moving_average(quasi_area_ax, label, df.quasi_area, 3)
-
-    _index = (_index + 1) % len(_colormap)
 
 
 def num_sub(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
@@ -70,56 +53,53 @@ def num_sub(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex=True)
+
+    # plot 1a
+    # filenames = ["Beam_c200", "BeamPool_c200_t4", "BeamSplit_c50_t4"]
+
+    # plot 1b
+    # baseline_filename = "Beam_c200"
+    # filenames = ["BeamPool_c200_t4", "BeamSplit_c50_t4"]
+
+    # plot 2
+    # baseline_filename = "AStar"
+    # filenames = ["AStarSplit_t2", "AStarSplit_t4", "AStarSplit_t6", "AStarSplit_t8"]
+    # ax4.set_yticks([0])
+
+    # plot 3a
+    filenames = ["BeamPool_c200_t4", "BeamSplit_c200_t4", "AStarSplit_t4"]
 
     # read dump files
-    astar_label, astar_df = read_dump_file("out/AStar_noTL.json")
-    dfds = [
-        read_dump_file(f"out/{filename}.json")
-        for filename in [
-            # "Beam_c50",
-            # "Beam_c100",
-            # "Beam_c200",
-            # "BeamSplit_c200_t4",
-            # "BeamSplit_c100_t8",
-            # "BeamSplit_c65_t12",
-            "AStarSplit_t2_noTL",
-            "AStarSplit_t4_noTL",
-            "AStarSplit_t6_noTL",
-            "AStarSplit_t8_noTL",
-        ]
-    ]
-    label_pad = max(len(label) for label, *_ in dfds + [(astar_label,)])
+    dfds = [read_dump_file(f"out/{filename}.json") for filename in filenames]
 
     # plot data
-    # plot_series(ax1, ax2, ax3, ax4, astar_label, astar_df, label_pad)
-    # for label, df in dfds:
-    #     print(f"{label: >{label_pad}}: {agg_data(df.time)}")
-    #     plot_series(ax1, ax2, ax3, ax4, label, df, label_pad)
-
-    # plot data relative to sequential A*
-    ax1.plot(astar_df.time, label=astar_label, color=_colormap[_index])
-    plot_series(None, ax2, ax3, ax4, astar_label, num_sub(astar_df, astar_df))
     for label, df in dfds:
-        print(f"{label: >{label_pad}}: {agg_data(df.time)}")
-        ax1.plot(df.time, label=label, color=_colormap[_index])
-        plot_series(None, ax2, ax3, ax4, label, num_sub(df, astar_df))
+        plot_series(ax1, ax2, ax3, ax4, label, df)
+    ax2.set_title("Number of segments")
+    ax3.set_title("Size of largest dimension")
+    ax4.set_title("Quasi-area (q*r*s)")
+
+    # plot data relative to baseline
+    # baseline_label, baseline_df = read_dump_file(f"out/{baseline_filename}.json")
+    # ax1.plot(baseline_df.time, label=baseline_label)
+    # plot_series(None, ax2, ax3, ax4, baseline_label, num_sub(baseline_df, baseline_df))
+    # for label, df in dfds:
+    #     ax1.plot(df.time, label=label)
+    #     plot_series(None, ax2, ax3, ax4, label, num_sub(df, baseline_df))
+    # ax2.set_title("Number of segments vs. sequential")
+    # ax3.set_title("Size of largest dimension vs. sequential")
+    # ax4.set_title("Quasi-area (q*r*s) vs. sequential")
 
     # decorate plots
     ax1.set_title("Time to generate")
 
-    # ax2.set_title("Number of segments")
-    # ax3.set_title("Size of largest dimension")
-    # ax4.set_title("Quasi-area (q*r*s)")
-
-    ax2.set_title("Number of segments vs. sequential A*")
-    ax3.set_title("Size of largest dimension vs. sequential A*")
-    ax4.set_title("Quasi-area (q*r*s) vs. sequential A*")
-
     ax1.legend(loc="upper left")
-    ax2.legend(loc="upper left")
-    ax3.legend(loc="upper left")
-    ax4.legend(loc="upper left")
+    # ax2.legend(loc="upper left")
+    # ax3.legend(loc="upper left")
+    # ax4.legend(loc="upper left")
+
+    ax1.set_xmargin(0.01)
 
     fig.set_tight_layout(True)
     plt.show()

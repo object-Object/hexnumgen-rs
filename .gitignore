@@ -6,7 +6,7 @@ numbers_*.json
 # Rust
 
 /target
-/Cargo.lock
+# /Cargo.lock
 
 
 # Python
