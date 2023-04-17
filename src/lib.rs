@@ -11,8 +11,8 @@ use clap::Subcommand;
 use num_rational::Ratio;
 use numgen::{
     generators::{
-        traits::PathGenerator, AStarPathGenerator, BeamParallelPoolPathGenerator, BeamParallelSplitPathGenerator,
-        BeamPathGenerator,
+        traits::PathGenerator, AStarParallelSplitPathGenerator, AStarPathGenerator, BeamParallelPoolPathGenerator,
+        BeamParallelSplitPathGenerator, BeamPathGenerator,
     },
     Path,
 };
@@ -20,7 +20,7 @@ use pyo3::prelude::*;
 
 pub use hex_math::Direction;
 pub use numgen::{
-    generators::{AStarOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
+    generators::{AStarOptions, AStarSplitOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
     Bounds,
 };
 
@@ -48,6 +48,8 @@ pub enum GeneratorOptions {
     BeamSplit(BeamSplitOptions),
     #[command(name = "astar")]
     AStar(AStarOptions),
+    #[command(name = "astar-split")]
+    AStarSplit(AStarSplitOptions),
 }
 
 #[pyclass(get_all)]
@@ -94,6 +96,9 @@ pub fn generate_number_pattern(
             BeamParallelSplitPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
         }
         GeneratorOptions::AStar(opts) => AStarPathGenerator::new(target, trim_larger, allow_fractions, opts).run(),
+        GeneratorOptions::AStarSplit(opts) => {
+            AStarParallelSplitPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
+        }
     }
     .map(Into::into)
 }
@@ -118,5 +123,6 @@ fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BeamPoolOptions>()?;
     m.add_class::<BeamSplitOptions>()?;
     m.add_class::<AStarOptions>()?;
+    m.add_class::<AStarSplitOptions>()?;
     Ok(())
 }

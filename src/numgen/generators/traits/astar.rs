@@ -38,9 +38,7 @@ pub trait AStar {
                 && let Some(new_smallest) = self.find_best_in_frontier()
                 && new_smallest.should_replace(self.smallest())
             {
-                let opt = Some(new_smallest.clone());
-                self.frontier_mut().retain(|qp| qp.path.should_replace(&opt));
-                *self.smallest_mut() = opt;
+                self.update_smallest_and_prune(new_smallest.clone());
             }
         }
     }
@@ -57,7 +55,7 @@ pub trait AStar {
             .iter()
             .map(|qp| &qp.path)
             .filter(|path| path.value() == self.target())
-            .min_by_key(|path| path.bounds().quasi_area())
+            .min_by_key(|path| (path.bounds().quasi_area(), path.len()))
     }
 
     fn push_path(&mut self, path: Path) {
@@ -77,17 +75,25 @@ pub trait AStar {
 
     /// Returns true if there are valid solutions in the new frontier
     fn update_frontier(&mut self) -> bool {
-        let path = self.pop_path().unwrap();
+        let path = self.pop_path();
         let mut has_valid_solutions = false;
 
-        for new_path in self.next_paths(path) {
-            if new_path.value() == self.target() {
-                has_valid_solutions = true;
+        if let Some(path) = path {
+            for new_path in self.next_paths(path) {
+                if new_path.value() == self.target() {
+                    has_valid_solutions = true;
+                }
+                self.push_path(new_path);
             }
-            self.push_path(new_path);
         }
 
         has_valid_solutions
+    }
+
+    fn update_smallest_and_prune(&mut self, new_smallest: Path) {
+        let new_smallest = Some(new_smallest);
+        self.frontier_mut().retain(|qp| qp.path.should_replace(&new_smallest));
+        *self.smallest_mut() = new_smallest;
     }
 
     fn heuristic(&mut self, path: &Path) -> usize {

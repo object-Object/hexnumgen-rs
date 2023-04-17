@@ -40,9 +40,15 @@ class BeamSplitOptions:
 class AStarOptions:
     def __init__(self) -> None: ...
 
+class AStarSplitOptions:
+    num_threads: int
+    def __init__(self, num_threads: int) -> None: ...
+
+Options = BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions | AStarSplitOptions
+
 def generate_number_pattern(
     target: int | tuple[int, int],
     trim_larger: bool,
     allow_fractions: bool,
-    options: BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions,
+    options: Options,
 ) -> GeneratedNumber | None: ...
