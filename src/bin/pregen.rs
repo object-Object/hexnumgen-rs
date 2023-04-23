@@ -22,7 +22,7 @@ fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     groups
 }
 
-fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, (String, String)> {
+fn find_patterns(targets: Vec<i64>, only_tail: bool) -> BTreeMap<i64, (Option<String>, String)> {
     let mut data = BTreeMap::new();
     let re = Regex::new(r"^aqaa").unwrap();
 
@@ -33,25 +33,35 @@ fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, (String, String)> {
             generate_number_pattern(target.into(), false, false, hexnumgen::GeneratorOptions::AStar(AStarOptions {}))
                 .unwrap();
 
-        if !target.is_zero() {
-            let negative_pattern = re.replace(&pattern, "dedd").to_string();
-            data.insert(-target, (Direction::NorthEast.to_string(), negative_pattern));
+        if only_tail {
+            data.insert(target, (None, re.replace(&pattern, "").to_string()));
+            continue;
         }
 
-        data.insert(target, (direction, pattern));
+        if !target.is_zero() {
+            let negative_pattern = re.replace(&pattern, "dedd").to_string();
+            data.insert(-target, (Some(Direction::NorthEast.to_string()), negative_pattern));
+        }
+
+        data.insert(target, (Some(direction), pattern));
     }
 
     data
 }
 
-fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, (String, String)>>) {
-    tx.send(find_patterns(targets)).unwrap();
+fn worker(targets: Vec<i64>, only_tail: bool, tx: Sender<BTreeMap<i64, (Option<String>, String)>>) {
+    tx.send(find_patterns(targets, only_tail)).unwrap();
 }
 
 #[derive(Parser)]
+#[command(author = "Gamma Delta", version = "1", about = "generates hexcasting number literals")]
 struct Cli {
     /// Largest number to generate a literal for.
     max: u64,
+
+    /// only generate the "tail" of the number literal
+    #[arg(short, long)]
+    only_tail: bool,
 
     /// Number of threads to use.
     threads: Option<usize>,
@@ -69,7 +79,7 @@ fn main() {
 
             for targets in n_groups(all_targets, threads) {
                 let tx = tx.clone();
-                thread::spawn(move || worker(targets, tx));
+                thread::spawn(move || worker(targets, cli.only_tail.clone(), tx));
             }
             drop(tx);
 
@@ -79,7 +89,7 @@ fn main() {
             }
             all_data
         }
-        None => find_patterns(all_targets),
+        None => find_patterns(all_targets, cli.only_tail.clone()),
     };
 
     fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
