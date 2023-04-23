@@ -1,6 +1,6 @@
 use clap::Parser;
 use hexnumgen::{generate_number_pattern, AStarOptions, Direction, GeneratedNumber};
-use num_traits::Zero;
+
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
 use std::{
@@ -22,35 +22,25 @@ fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     groups
 }
 
-fn find_patterns(targets: Vec<i64>, only_tail: bool) -> BTreeMap<i64, (Option<String>, String)> {
+fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, String> {
     let mut data = BTreeMap::new();
     let re = Regex::new(r"^aqaa").unwrap();
 
     for (i, &target) in targets.iter().enumerate() {
         println!("{}/{}", i + 1, targets.len());
 
-        let GeneratedNumber { direction, pattern, .. } =
+        let GeneratedNumber { pattern, .. } =
             generate_number_pattern(target.into(), false, false, hexnumgen::GeneratorOptions::AStar(AStarOptions {}))
                 .unwrap();
 
-        if only_tail {
-            data.insert(target, (None, re.replace(&pattern, "").to_string()));
-            continue;
-        }
-
-        if !target.is_zero() {
-            let negative_pattern = re.replace(&pattern, "dedd").to_string();
-            data.insert(-target, (Some(Direction::NorthEast.to_string()), negative_pattern));
-        }
-
-        data.insert(target, (Some(direction), pattern));
+        data.insert(target, re.replace(&pattern, "").to_string());
     }
 
     data
 }
 
-fn worker(targets: Vec<i64>, only_tail: bool, tx: Sender<BTreeMap<i64, (Option<String>, String)>>) {
-    tx.send(find_patterns(targets, only_tail)).unwrap();
+fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, String>>) {
+    tx.send(find_patterns(targets)).unwrap();
 }
 
 #[derive(Parser)]
@@ -79,7 +69,7 @@ fn main() {
 
             for targets in n_groups(all_targets, threads) {
                 let tx = tx.clone();
-                thread::spawn(move || worker(targets, cli.only_tail.clone(), tx));
+                thread::spawn(move || worker(targets, tx));
             }
             drop(tx);
 
@@ -89,8 +79,16 @@ fn main() {
             }
             all_data
         }
-        None => find_patterns(all_targets, cli.only_tail.clone()),
+        None => find_patterns(all_targets),
     };
-
-    fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
+    if cli.only_tail {
+        fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
+    } else {
+        let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
+        for (k, v) in all_data {
+            pos_neg_values.insert(k, (Direction::SouthEast.to_string(), "aqaa".to_owned() + &v));
+            pos_neg_values.insert(-k, (Direction::NorthEast.to_string(), "dedd".to_owned() + &v));
+        }
+        fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&pos_neg_values).unwrap()).unwrap();
+    }
 }
