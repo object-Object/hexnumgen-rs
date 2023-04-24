@@ -49,7 +49,7 @@ struct Cli {
     /// Largest number to generate a literal for.
     max: u64,
 
-    /// only generate the "tail" of the number literal
+    /// Only generate the "tail" of the number literal (skip aqaa/dedd).
     #[arg(short, long)]
     only_tail: bool,
 
