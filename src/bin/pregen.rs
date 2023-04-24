@@ -82,7 +82,7 @@ fn main() {
     };
 
     fs::write(
-        format!("numers_{}.json", cli.max),
+        format!("numbers_{}.json", cli.max),
         if cli.only_tail {
             serde_json::to_string_pretty(&all_data).unwrap()
         } else {
