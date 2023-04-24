@@ -44,7 +44,6 @@ fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, String>>) {
 }
 
 #[derive(Parser)]
-#[command(author = "Gamma Delta", version = "1", about = "generates hexcasting number literals")]
 struct Cli {
     /// Largest number to generate a literal for.
     max: u64,
