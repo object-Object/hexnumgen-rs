@@ -81,14 +81,22 @@ fn main() {
         }
         None => find_patterns(all_targets),
     };
-    if cli.only_tail {
-        fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
-    } else {
-        let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
-        for (k, v) in all_data {
-            pos_neg_values.insert(k, (Direction::SouthEast.to_string(), "aqaa".to_owned() + &v));
-            pos_neg_values.insert(-k, (Direction::NorthEast.to_string(), "dedd".to_owned() + &v));
-        }
-        fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&pos_neg_values).unwrap()).unwrap();
-    }
+
+    fs::write(
+        format!("numers_{}.json", cli.max),
+        if cli.only_tail {
+            serde_json::to_string_pretty(&all_data).unwrap()
+        } else {
+            let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
+            for (k, v) in all_data {
+                if k == 0 {
+                    continue;
+                }
+                pos_neg_values.insert(k, (Direction::SouthEast.to_string(), format!("aqaa{v}")));
+                pos_neg_values.insert(-k, (Direction::NorthEast.to_string(), format!("dedd{v}")));
+            }
+            serde_json::to_string_pretty(&pos_neg_values).unwrap()
+        },
+    )
+    .unwrap()
 }
