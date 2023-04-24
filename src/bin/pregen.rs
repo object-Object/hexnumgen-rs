@@ -89,6 +89,7 @@ fn main() {
             let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
             for (k, v) in all_data {
                 if k == 0 {
+                    pos_neg_values.insert(k, (Direction::SouthEast.to_string(), format!("aqaa{v}")));
                     continue;
                 }
                 pos_neg_values.insert(k, (Direction::SouthEast.to_string(), format!("aqaa{v}")));
