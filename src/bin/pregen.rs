@@ -1,8 +1,10 @@
 use clap::Parser;
 use hexnumgen::{generate_number_pattern, AStarOptions, Direction, GeneratedNumber};
 
+use anyhow::Result;
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
+use serde::Serialize;
 use std::{
     collections::BTreeMap,
     fs,
@@ -43,20 +45,31 @@ fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, String>>) {
     tx.send(find_patterns(targets)).unwrap();
 }
 
-#[derive(Parser)]
-struct Cli {
-    /// Largest number to generate a literal for.
-    max: u64,
-
-    /// Only generate the "tail" of the number literal (skip aqaa/dedd).
-    #[arg(short, long)]
-    only_tail: bool,
-
-    /// Number of threads to use.
-    threads: Option<usize>,
+fn write_pregen<T: Serialize>(max: u64, pretty: bool, data: T) -> Result<()> {
+    Ok(fs::write(
+        format!("numbers_{}.json", max),
+        if pretty { serde_json::to_string_pretty(&data) } else { serde_json::to_string(&data) }?,
+    )?)
 }
 
-fn main() {
+#[derive(Parser)]
+struct Cli {
+    /// Largest number to generate a literal for
+    max: u64,
+
+    /// Number of threads to use
+    threads: Option<usize>,
+
+    /// Only generate the "tail" of the number literal (skip aqaa/dedd)
+    #[arg(short, long, default_value_t = false)]
+    only_tail: bool,
+
+    /// If the output should be prettified
+    #[arg(short, long, default_value_t = false)]
+    pretty: bool,
+}
+
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let mut all_targets = Vec::from_iter(0..=(cli.max as i64));
@@ -81,22 +94,16 @@ fn main() {
         None => find_patterns(all_targets),
     };
 
-    fs::write(
-        format!("numbers_{}.json", cli.max),
-        if cli.only_tail {
-            serde_json::to_string_pretty(&all_data).unwrap()
-        } else {
-            let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
-            for (k, v) in all_data {
-                if k == 0 {
-                    pos_neg_values.insert(k, (Direction::SouthEast.to_string(), format!("aqaa{v}")));
-                    continue;
-                }
-                pos_neg_values.insert(k, (Direction::SouthEast.to_string(), format!("aqaa{v}")));
-                pos_neg_values.insert(-k, (Direction::NorthEast.to_string(), format!("dedd{v}")));
+    if cli.only_tail {
+        write_pregen(cli.max, cli.pretty, all_data)
+    } else {
+        let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
+        for (target, tail) in all_data {
+            pos_neg_values.insert(target, (Direction::SouthEast.to_string(), format!("aqaa{tail}")));
+            if target != 0 {
+                pos_neg_values.insert(-target, (Direction::NorthEast.to_string(), format!("dedd{tail}")));
             }
-            serde_json::to_string_pretty(&pos_neg_values).unwrap()
-        },
-    )
-    .unwrap()
+        }
+        write_pregen(cli.max, cli.pretty, pos_neg_values)
+    }
 }
