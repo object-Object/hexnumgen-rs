@@ -1,8 +1,10 @@
 use clap::Parser;
 use hexnumgen::{generate_number_pattern, AStarOptions, Direction, GeneratedNumber};
-use num_traits::Zero;
+
+use anyhow::Result;
 use rand::{seq::SliceRandom, thread_rng};
 use regex::Regex;
+use serde::Serialize;
 use std::{
     collections::BTreeMap,
     fs,
@@ -22,42 +24,52 @@ fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     groups
 }
 
-fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, (String, String)> {
+fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, String> {
     let mut data = BTreeMap::new();
     let re = Regex::new(r"^aqaa").unwrap();
 
     for (i, &target) in targets.iter().enumerate() {
         println!("{}/{}", i + 1, targets.len());
 
-        let GeneratedNumber { direction, pattern, .. } =
+        let GeneratedNumber { pattern, .. } =
             generate_number_pattern(target.into(), false, false, hexnumgen::GeneratorOptions::AStar(AStarOptions {}))
                 .unwrap();
 
-        if !target.is_zero() {
-            let negative_pattern = re.replace(&pattern, "dedd").to_string();
-            data.insert(-target, (Direction::NorthEast.to_string(), negative_pattern));
-        }
-
-        data.insert(target, (direction, pattern));
+        data.insert(target, re.replace(&pattern, "").to_string());
     }
 
     data
 }
 
-fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, (String, String)>>) {
+fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, String>>) {
     tx.send(find_patterns(targets)).unwrap();
+}
+
+fn write_pregen<T: Serialize>(max: u64, pretty: bool, data: T) -> Result<()> {
+    Ok(fs::write(
+        format!("numbers_{}.json", max),
+        if pretty { serde_json::to_string_pretty(&data) } else { serde_json::to_string(&data) }?,
+    )?)
 }
 
 #[derive(Parser)]
 struct Cli {
-    /// Largest number to generate a literal for.
+    /// Largest number to generate a literal for
     max: u64,
 
-    /// Number of threads to use.
+    /// Number of threads to use
     threads: Option<usize>,
+
+    /// Only generate the "tail" of the number literal (skip aqaa/dedd)
+    #[arg(short, long, default_value_t = false)]
+    only_tail: bool,
+
+    /// If the output should be prettified
+    #[arg(short, long, default_value_t = false)]
+    pretty: bool,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let mut all_targets = Vec::from_iter(0..=(cli.max as i64));
@@ -82,5 +94,16 @@ fn main() {
         None => find_patterns(all_targets),
     };
 
-    fs::write(format!("numbers_{}.json", cli.max), serde_json::to_string_pretty(&all_data).unwrap()).unwrap();
+    if cli.only_tail {
+        write_pregen(cli.max, cli.pretty, all_data)
+    } else {
+        let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
+        for (target, tail) in all_data {
+            pos_neg_values.insert(target, (Direction::SouthEast.to_string(), format!("aqaa{tail}")));
+            if target != 0 {
+                pos_neg_values.insert(-target, (Direction::NorthEast.to_string(), format!("dedd{tail}")));
+            }
+        }
+        write_pregen(cli.max, cli.pretty, pos_neg_values)
+    }
 }
