@@ -36,6 +36,10 @@ impl Coord {
         }
         rotated
     }
+
+    pub fn pixel(&self) -> (f32, f32) {
+        (3_f32.sqrt() * (self.q as f32) + 3_f32.sqrt() / 2. * (self.r as f32), 3. / 2. * (self.r as f32))
+    }
 }
 
 impl Add for Coord {
@@ -78,6 +82,14 @@ impl Sub for Coord {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
+        self + -rhs
+    }
+}
+
+impl Sub<Direction> for Coord {
+    type Output = Self;
+
+    fn sub(self, rhs: Direction) -> Self::Output {
         self + -rhs
     }
 }

@@ -1,4 +1,8 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Neg, str::FromStr};
+
+use aho_corasick::AhoCorasick;
+
+use crate::errors::HexError;
 
 use super::Angle;
 
@@ -40,6 +44,28 @@ impl From<i32> for Direction {
     }
 }
 
+const PATTERNS: &[&str] = &["_", "-", "north", "south", "west", "east"];
+const REPLACE_WITH: &[&str] = &["", "", "n", "s", "w", "e"];
+lazy_static! {
+    static ref AC: AhoCorasick = AhoCorasick::new(PATTERNS).unwrap();
+}
+
+impl FromStr for Direction {
+    type Err = HexError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match AC.replace_all(&s.to_ascii_lowercase(), REPLACE_WITH).as_str() {
+            "ne" => Ok(Self::NorthEast),
+            "e" => Ok(Self::East),
+            "se" => Ok(Self::SouthEast),
+            "sw" => Ok(Self::SouthWest),
+            "w" => Ok(Self::West),
+            "nw" => Ok(Self::NorthWest),
+            _ => Err(HexError::InvalidDirection(s.to_string()))?,
+        }
+    }
+}
+
 impl Display for Direction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match *self {
@@ -51,5 +77,13 @@ impl Display for Direction {
             Direction::NorthWest => "NORTH_WEST",
         };
         write!(f, "{}", name)
+    }
+}
+
+impl Neg for Direction {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self.rotated(Angle::Back)
     }
 }

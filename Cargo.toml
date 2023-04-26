@@ -15,6 +15,9 @@ name = "hexnumgen_cli"
 [[bin]]
 name = "pregen"
 
+[[bin]]
+name = "draw"
+
 [profile.release]
 debug = 1
 
@@ -33,3 +36,8 @@ num-traits = "0.2"
 num-integer = "0.1"
 anyhow = "1.0"
 parking_lot = { version = "0.12", features = ["deadlock_detection"]}
+tiny-skia = "0.9"
+tiny-skia-path = "*" # dependency of tiny-skia
+png = "*" # dependency of tiny-skia
+aho-corasick = "1.0"
+lazy_static = "1.4"

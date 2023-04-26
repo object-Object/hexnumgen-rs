@@ -1,5 +1,9 @@
-#![feature(let_chains)]
+#![feature(let_chains, type_alias_impl_trait)]
 
+#[macro_use]
+extern crate lazy_static;
+
+mod drawing;
 mod errors;
 mod hex_math;
 mod numgen;
@@ -18,6 +22,7 @@ use numgen::{
 };
 use pyo3::prelude::*;
 
+pub use drawing::{pattern_to_points, PatternPlotter};
 pub use hex_math::Direction;
 pub use numgen::{
     generators::{AStarOptions, AStarSplitOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
