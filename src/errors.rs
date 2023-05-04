@@ -12,4 +12,8 @@ pub enum HexError {
     InvalidAngleForNumber(Angle, u32),
     #[error("segment `{0:?}` already exists in path")]
     SegmentAlreadyExists(Segment),
+    #[error("value is valid but would be outside of PathLimits")]
+    OutOfLimits,
 }
+
+pub type HexResult<T> = Result<T, HexError>;

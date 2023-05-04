@@ -1,28 +1,54 @@
+class Bounds:
+    q: int
+    r: int
+    s: int
+    def __init__(self, q: int, r: int, s: int) -> None: ...
+    @property
+    def largest_dimension(self) -> int: ...
+    @property
+    def quasi_area(self) -> int: ...
+
 class GeneratedNumber:
     @property
     def direction(self) -> str: ...
-
     @property
     def pattern(self) -> str: ...
-
     @property
-    def largest_dimension(self) -> int: ...
-    
+    def bounds(self) -> Bounds: ...
     @property
     def num_points(self) -> int: ...
+    @property
+    def num_segments(self) -> int: ...
 
-def generate_number_pattern_beam(
-    target: int | tuple[int, int],
-    q_size: int = 8,
-    r_size: int = 8,
-    s_size: int = 8,
-    carryover: int = 25,
-    trim_larger: bool = True,
-    allow_fractions: bool = False,
-) -> GeneratedNumber | None: ...
+class BeamOptions:
+    bounds: Bounds
+    carryover: int
+    def __init__(self, bounds: Bounds, carryover: int) -> None: ...
 
-def generate_number_pattern_astar(
+class BeamPoolOptions:
+    bounds: Bounds
+    carryover: int
+    num_threads: int
+    def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
+
+class BeamSplitOptions:
+    bounds: Bounds
+    carryover: int
+    num_threads: int
+    def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
+
+class AStarOptions:
+    def __init__(self) -> None: ...
+
+class AStarSplitOptions:
+    num_threads: int
+    def __init__(self, num_threads: int) -> None: ...
+
+Options = BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions | AStarSplitOptions
+
+def generate_number_pattern(
     target: int | tuple[int, int],
-    trim_larger: bool = True,
-    allow_fractions: bool = False,
+    trim_larger: bool,
+    allow_fractions: bool,
+    options: Options,
 ) -> GeneratedNumber | None: ...

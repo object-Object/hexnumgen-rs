@@ -1,9 +1,13 @@
+/scripts/out
+/out
+numbers_*.json
+
+
 # Rust
 
 /target
-/Cargo.lock
+# /Cargo.lock
 
-numbers_*.json
 
 # Python
 

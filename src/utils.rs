@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use num_integer::Integer;
 use num_rational::Ratio;
 use num_traits::Signed;
@@ -53,4 +54,15 @@ where
     T: Eq + Hash + Clone,
 {
     cloned_union(hashset, [item])
+}
+
+// adapted from https://stackoverflow.com/a/67128189
+pub fn drain_every_other<T>(items: &mut Vec<T>) -> Vec<T> {
+    let mut opt_items = items.drain(..).map(Some).collect_vec();
+
+    let picked = opt_items.iter_mut().step_by(2).map(|i| i.take().unwrap()).collect_vec();
+
+    items.extend(opt_items.into_iter().flatten());
+
+    picked
 }
