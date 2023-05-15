@@ -37,8 +37,11 @@ impl Coord {
         rotated
     }
 
-    pub fn pixel(&self) -> (f32, f32) {
-        (3_f32.sqrt() * (self.q as f32) + 3_f32.sqrt() / 2. * (self.r as f32), 3. / 2. * (self.r as f32))
+    pub fn pixel(&self, size: f32) -> (f32, f32) {
+        (
+            size * (3_f32.sqrt() * (self.q as f32) + 3_f32.sqrt() / 2. * (self.r as f32)),
+            size * (3. / 2. * (self.r as f32)),
+        )
     }
 }
 

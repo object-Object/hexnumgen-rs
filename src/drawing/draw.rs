@@ -21,7 +21,6 @@ pub fn pattern_to_points(direction: Direction, pattern: &str) -> HexResult<Vec<C
 
 pub struct PatternPlotter<'a> {
     stroker: PathStroker,
-    resolution_scale: f32,
 
     pixmap: Pixmap,
     paint: Paint<'a>,
@@ -29,12 +28,9 @@ pub struct PatternPlotter<'a> {
 }
 
 impl PatternPlotter<'_> {
-    pub fn new(width: u32, height: u32, scale: Option<f32>) -> Option<Self> {
+    pub fn new(width: u32, height: u32) -> Option<Self> {
         Some(Self {
             stroker: PathStroker::new(),
-            resolution_scale: scale
-                .map(|s| PathStroker::compute_resolution_scale(&Transform::from_scale(s, s)))
-                .unwrap_or(1.),
             pixmap: Pixmap::new(width, height)?,
             paint: Paint { anti_alias: true, ..Default::default() },
             stroke: Stroke { line_cap: LineCap::Round, line_join: LineJoin::Round, ..Default::default() },
@@ -50,11 +46,11 @@ impl PatternPlotter<'_> {
     ) -> Option<()> {
         let path = {
             let mut pb = PathBuilder::new();
-            let (x, y) = Coord::origin().pixel();
+            let (x, y) = Coord::origin().pixel(20.);
             pb.move_to(x, y);
 
             for point in points {
-                let (x, y) = point.pixel();
+                let (x, y) = point.pixel(20.);
                 pb.line_to(x, y);
             }
 
@@ -78,7 +74,7 @@ impl PatternPlotter<'_> {
         self.stroke.width = 0.;
 
         for point in points {
-            let (x, y) = point.pixel();
+            let (x, y) = point.pixel(20.);
             let path = PathBuilder::from_circle(x, y, radius)?;
             self.pixmap.fill_path(&path, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
         }
@@ -95,7 +91,7 @@ impl PatternPlotter<'_> {
     }
 
     fn stroke_path(&mut self, path: &Path, transform: Option<Transform>) -> Option<()> {
-        let stroked = self.stroker.stroke(&path, &self.stroke, self.resolution_scale)?;
+        let stroked = self.stroker.stroke(&path, &self.stroke, 1.)?;
         self.pixmap.fill_path(&stroked, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
         Some(())
     }
