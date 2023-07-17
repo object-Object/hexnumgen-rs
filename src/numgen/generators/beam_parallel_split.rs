@@ -10,11 +10,13 @@ use crate::{
 use clap::Args;
 use num_rational::Ratio;
 use parking_lot::{Condvar, Mutex, RwLock};
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 use super::traits::{BeamSearch, PathGenerator, Split};
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
 pub struct BeamSplitOptions {
     #[command(flatten)]
@@ -24,8 +26,9 @@ pub struct BeamSplitOptions {
     pub num_threads: usize,
 }
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl BeamSplitOptions {
+    #[cfg(feature = "pyo3")]
     #[new]
     fn new(bounds: Bounds, carryover: usize, num_threads: usize) -> Self {
         Self { bounds, carryover, num_threads }

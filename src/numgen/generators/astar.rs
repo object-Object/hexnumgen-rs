@@ -1,5 +1,7 @@
 use clap::Args;
 use num_rational::Ratio;
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 use crate::{
@@ -11,12 +13,13 @@ use std::collections::BinaryHeap;
 
 use super::traits::{AStar, PathGenerator};
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
 pub struct AStarOptions {}
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl AStarOptions {
+    #[cfg(feature = "pyo3")]
     #[new]
     fn new() -> Self {
         Self {}

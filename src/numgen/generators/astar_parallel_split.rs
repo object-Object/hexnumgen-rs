@@ -2,6 +2,8 @@ use clap::Args;
 use itertools::Itertools;
 use num_rational::Ratio;
 use parking_lot::{Condvar, Mutex, RwLock};
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 use crate::{
@@ -18,14 +20,15 @@ use std::{
 
 use super::traits::{AStar, PathGenerator, Split};
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
 pub struct AStarSplitOptions {
     pub num_threads: usize,
 }
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl AStarSplitOptions {
+    #[cfg(feature = "pyo3")]
     #[new]
     fn new(num_threads: usize) -> Self {
         Self { num_threads }

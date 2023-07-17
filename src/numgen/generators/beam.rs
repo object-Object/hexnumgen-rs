@@ -1,11 +1,13 @@
 use crate::numgen::{Bounds, Path, PathLimits, SharedPath};
 use clap::Args;
 use num_rational::Ratio;
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 use super::traits::{BeamSearch, PathGenerator};
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
 pub struct BeamOptions {
     #[command(flatten)]
@@ -14,8 +16,9 @@ pub struct BeamOptions {
     pub carryover: usize,
 }
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl BeamOptions {
+    #[cfg(feature = "pyo3")]
     #[new]
     fn new(bounds: Bounds, carryover: usize) -> Self {
         Self { bounds, carryover }
