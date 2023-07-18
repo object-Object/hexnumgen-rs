@@ -40,17 +40,18 @@ impl PatternPlotter<'_> {
     pub fn plot_monochrome_line(
         &mut self,
         points: &Vec<Coord>,
+        pixel_size: f32,
         width: f32,
         color: Color,
         transform: Option<Transform>,
     ) -> Option<()> {
         let path = {
             let mut pb = PathBuilder::new();
-            let (x, y) = Coord::origin().pixel(20.);
+            let (x, y) = Coord::origin().pixel(pixel_size);
             pb.move_to(x, y);
 
             for point in points {
-                let (x, y) = point.pixel(20.);
+                let (x, y) = point.pixel(pixel_size);
                 pb.line_to(x, y);
             }
 
@@ -65,6 +66,7 @@ impl PatternPlotter<'_> {
     pub fn plot_monochrome_points(
         &mut self,
         points: &Vec<Coord>,
+        pixel_size: f32,
         width: f32,
         color: Color,
         transform: Option<Transform>,
@@ -74,7 +76,7 @@ impl PatternPlotter<'_> {
         self.stroke.width = 0.;
 
         for point in points {
-            let (x, y) = point.pixel(20.);
+            let (x, y) = point.pixel(pixel_size);
             let path = PathBuilder::from_circle(x, y, radius)?;
             self.pixmap.fill_path(&path, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
         }
@@ -91,7 +93,7 @@ impl PatternPlotter<'_> {
     }
 
     fn stroke_path(&mut self, path: &Path, transform: Option<Transform>) -> Option<()> {
-        let stroked = self.stroker.stroke(&path, &self.stroke, 1.)?;
+        let stroked = self.stroker.stroke(path, &self.stroke, 1.)?;
         self.pixmap.fill_path(&stroked, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
         Some(())
     }
