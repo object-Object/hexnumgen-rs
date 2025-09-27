@@ -26,13 +26,13 @@ impl AbsDiffRatio for Ratio<u64> {
 }
 
 pub trait RwLockWriteIf<T> {
-    fn write_if<F>(&self, f: F) -> Option<RwLockWriteGuard<T>>
+    fn write_if<F>(&self, f: F) -> Option<RwLockWriteGuard<'_, T>>
     where
         F: Fn(&T) -> bool;
 }
 
 impl<T> RwLockWriteIf<T> for RwLock<T> {
-    fn write_if<F>(&self, f: F) -> Option<RwLockWriteGuard<T>>
+    fn write_if<F>(&self, f: F) -> Option<RwLockWriteGuard<'_, T>>
     where
         F: Fn(&T) -> bool,
     {
