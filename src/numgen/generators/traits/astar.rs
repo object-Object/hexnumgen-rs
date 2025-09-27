@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+use std::{collections::BinaryHeap, time::Instant};
 
 use num_rational::Ratio;
 use num_traits::Zero;
@@ -11,6 +11,7 @@ use crate::{
 
 pub trait AStar {
     fn limits(&self) -> PathLimits;
+    fn deadline(&self) -> Option<Instant>;
     fn smallest(&self) -> &Option<Path>;
     fn smallest_mut(&mut self) -> &mut Option<Path>;
     fn frontier(&self) -> &BinaryHeap<QueuedPath>;
@@ -33,7 +34,11 @@ pub trait AStar {
     }
 
     fn do_search(&mut self) {
-        while !self.frontier().is_empty() {
+        while !self.frontier().is_empty()
+            && self
+                .deadline()
+                .is_none_or(|deadline| deadline > Instant::now())
+        {
             if self.update_frontier()
                 && let Some(new_smallest) = self.find_best_in_frontier()
                 && new_smallest.should_replace(self.smallest())

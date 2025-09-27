@@ -2,6 +2,7 @@ use std::{
     collections::BinaryHeap,
     sync::Arc,
     thread::{self, JoinHandle},
+    time::Instant,
 };
 
 use clap::Args;
@@ -112,6 +113,10 @@ impl Split for AStarParallelSplitPathGenerator {
 impl AStar for AStarParallelSplitPathGenerator {
     fn limits(&self) -> PathLimits {
         self.limits
+    }
+
+    fn deadline(&self) -> Option<Instant> {
+        None
     }
 
     fn smallest(&self) -> &Option<Path> {

@@ -35,7 +35,7 @@ fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, String> {
             target.into(),
             false,
             false,
-            hexnumgen::GeneratorOptions::AStar(AStarOptions {}),
+            hexnumgen::GeneratorOptions::AStar(AStarOptions { timeout: None }),
         )
         .unwrap();
 

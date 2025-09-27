@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 class Bounds:
     q: int
     r: int
@@ -38,7 +40,8 @@ class BeamSplitOptions:
     def __init__(self, bounds: Bounds, carryover: int, num_threads: int) -> None: ...
 
 class AStarOptions:
-    def __init__(self) -> None: ...
+    timeout: timedelta | None
+    def __init__(self, timeout: timedelta | None = None) -> None: ...
 
 class AStarSplitOptions:
     num_threads: int
