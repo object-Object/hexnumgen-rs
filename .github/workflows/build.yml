@@ -21,85 +21,89 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        python-version:
+          - 3.11
+          - 3.12
+          - 3.13
+        platform:
           # linux
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: x86_64
             manylinux: auto
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: x86
             manylinux: auto
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: aarch64
             manylinux: auto
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: armv7
             manylinux: auto
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: s390x
             manylinux: auto
-          - platform: linux
+          - name: linux
             runner: ubuntu-22.04
             target: ppc64le
             manylinux: auto
           # musllinux
-          - platform: musllinux
+          - name: musllinux
             runner: ubuntu-22.04
             target: x86_64
             manylinux: musllinux_1_2
-          - platform: musllinux
+          - name: musllinux
             runner: ubuntu-22.04
             target: x86
             manylinux: musllinux_1_2
-          - platform: musllinux
+          - name: musllinux
             runner: ubuntu-22.04
             target: aarch64
             manylinux: musllinux_1_2
-          - platform: musllinux
+          - name: musllinux
             runner: ubuntu-22.04
             target: armv7
             manylinux: musllinux_1_2
           # windows
-          - platform: windows
+          - name: windows
             runner: windows-latest
             target: x64
-          - platform: windows
+          - name: windows
             runner: windows-latest
             target: x86
             python-architecture: x86
           # macos
-          - platform: macos
+          - name: macos
             runner: macos-13
             target: x86_64
-          - platform: macos
+          - name: macos
             runner: macos-14
             target: aarch64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.platform.runner }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
-          architecture: ${{ matrix.python-architecture }}
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.platform.python-architecture }}
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
+          target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
           sccache: ${{ !inputs.no_cache }}
-          manylinux: ${{ matrix.manylinux }}
+          manylinux: ${{ matrix.platform.manylinux }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.platform }}-${{ matrix.target }}
+          name: wheels-${{ matrix.platform.name }}-${{ matrix.platform.target }}
           path: dist
 
   sdist:
