@@ -2,5 +2,8 @@
 requires = ["maturin>=0.13,<0.14"]
 build-backend = "maturin"
 
+[tool.maturin]
+features = ["pyo3"]
+
 [tool.black]
 line-length = 95

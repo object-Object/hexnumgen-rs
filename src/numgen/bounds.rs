@@ -1,7 +1,9 @@
 use clap::Args;
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Args)]
 pub struct Bounds {
     #[arg(short, long = "q_size", default_value_t = 8)]
@@ -12,19 +14,20 @@ pub struct Bounds {
     pub s: u32,
 }
 
-#[pymethods]
+#[cfg_eval]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl Bounds {
-    #[new]
+    #[cfg_attr(feature = "pyo3", new)]
     pub fn new(q: u32, r: u32, s: u32) -> Self {
         Self { q, r, s }
     }
 
-    #[getter]
+    #[cfg_attr(feature = "pyo3", getter)]
     pub fn largest_dimension(&self) -> u32 {
         self.q.max(self.r).max(self.s)
     }
 
-    #[getter]
+    #[cfg_attr(feature = "pyo3", getter)]
     pub fn quasi_area(&self) -> u32 {
         self.q * self.r * self.s
     }

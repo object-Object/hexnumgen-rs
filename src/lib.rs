@@ -1,5 +1,9 @@
-#![feature(let_chains)]
+#![feature(let_chains, type_alias_impl_trait, cfg_eval)]
 
+#[macro_use]
+extern crate lazy_static;
+
+mod drawing;
 mod errors;
 mod hex_math;
 mod numgen;
@@ -16,19 +20,22 @@ use numgen::{
     },
     Path,
 };
+
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
+pub use drawing::{pattern_to_points, PatternPlotter};
 pub use hex_math::Direction;
 pub use numgen::{
     generators::{AStarOptions, AStarSplitOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
     Bounds,
 };
 
-#[derive(FromPyObject)]
+#[cfg_attr(feature = "pyo3", derive(FromPyObject))]
 pub enum PyRatio {
-    #[pyo3(annotation = "int")]
+    #[cfg_attr(feature = "pyo3", pyo3(annotation = "int"))]
     Int(i64),
-    #[pyo3(annotation = "tuple[int, int]")]
+    #[cfg_attr(feature = "pyo3", pyo3(annotation = "tuple[int, int]"))]
     Tuple(i64, i64),
 }
 
@@ -41,7 +48,8 @@ impl From<PyRatio> for Ratio<i64> {
     }
 }
 
-#[derive(FromPyObject, Subcommand)]
+#[derive(Subcommand)]
+#[cfg_attr(feature = "pyo3", derive(FromPyObject))]
 pub enum GeneratorOptions {
     Beam(BeamOptions),
     BeamPool(BeamPoolOptions),
@@ -52,7 +60,7 @@ pub enum GeneratorOptions {
     AStarSplit(AStarSplitOptions),
 }
 
-#[pyclass(get_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all))]
 pub struct GeneratedNumber {
     pub direction: String,
     pub pattern: String,
@@ -61,7 +69,7 @@ pub struct GeneratedNumber {
     pub num_segments: usize,
 }
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl GeneratedNumber {
     fn __str__(&self) -> String {
         format!("{} {}", self.direction, self.pattern)
@@ -103,6 +111,7 @@ pub fn generate_number_pattern(
     .map(Into::into)
 }
 
+#[cfg(feature = "pyo3")]
 #[pyfunction]
 #[pyo3(name = "generate_number_pattern")]
 fn generate_number_pattern_py(
@@ -114,6 +123,7 @@ fn generate_number_pattern_py(
     generate_number_pattern(target.into(), trim_larger, allow_fractions, options)
 }
 
+#[cfg(feature = "pyo3")]
 #[pymodule]
 fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_number_pattern_py, m)?)?;

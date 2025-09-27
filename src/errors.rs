@@ -1,3 +1,4 @@
+use png::EncodingError;
 use thiserror::Error;
 
 use crate::hex_math::{Angle, Segment};
@@ -14,6 +15,12 @@ pub enum HexError {
     SegmentAlreadyExists(Segment),
     #[error("value is valid but would be outside of PathLimits")]
     OutOfLimits,
+    #[error("PNG encoding error")]
+    EncodingError(#[from] EncodingError),
+    #[error("invalid pattern")]
+    InvalidPattern,
+    #[error("invalid direction `{0}`")]
+    InvalidDirection(String),
 }
 
 pub type HexResult<T> = Result<T, HexError>;

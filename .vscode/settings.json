@@ -9,4 +9,5 @@
     "python.formatting.provider": "black",
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.diagnosticMode": "workspace",
+    // "rust-analyzer.cargo.features": "all",
 }

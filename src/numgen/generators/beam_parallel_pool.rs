@@ -1,7 +1,9 @@
 use clap::Args;
 use num_rational::Ratio;
-use pyo3::prelude::*;
 use strum::IntoEnumIterator;
+
+#[cfg(feature = "pyo3")]
+use pyo3::prelude::*;
 
 use crate::{
     hex_math::Angle,
@@ -15,7 +17,7 @@ use super::{
     BeamOptions,
 };
 
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
 pub struct BeamPoolOptions {
     #[command(flatten)]
@@ -25,8 +27,9 @@ pub struct BeamPoolOptions {
     pub num_threads: usize,
 }
 
-#[pymethods]
+#[cfg_attr(feature = "pyo3", pymethods)]
 impl BeamPoolOptions {
+    #[cfg(feature = "pyo3")]
     #[new]
     fn new(bounds: Bounds, carryover: usize, num_threads: usize) -> Self {
         Self { bounds, carryover, num_threads }
