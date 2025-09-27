@@ -1,5 +1,7 @@
 # hexnumgen-rs
 
+Number literal generator for the Hex Casting mod for Minecraft.
+
 ## Installation
 
 * [Install Rust](https://www.rust-lang.org/tools/install).
