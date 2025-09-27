@@ -1,17 +1,15 @@
+use std::collections::BinaryHeap;
+
 use clap::Args;
 use num_rational::Ratio;
-
 #[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
+use super::traits::{AStar, PathGenerator};
 use crate::{
     numgen::{Path, PathLimits, QueuedPath},
     utils::NonZeroSign,
 };
-
-use std::collections::BinaryHeap;
-
-use super::traits::{AStar, PathGenerator};
 
 #[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
@@ -39,13 +37,13 @@ impl PathGenerator for AStarPathGenerator {
     type Opts = AStarOptions;
 
     fn new(target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, _: AStarOptions) -> Self {
-        let mut gen = Self {
+        let mut generator = Self {
             limits: PathLimits::unbounded(target, trim_larger, allow_fractions),
             smallest: None,
             frontier: BinaryHeap::new(),
         };
-        gen.push_path(Path::zero(NonZeroSign::from(target)));
-        gen
+        generator.push_path(Path::zero(NonZeroSign::from(target)));
+        generator
     }
 
     fn run(self) -> Option<Path> {

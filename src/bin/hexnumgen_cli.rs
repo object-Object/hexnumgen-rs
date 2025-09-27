@@ -64,14 +64,23 @@ struct Cli {
 fn main() -> Result<(), String> {
     let cli = Cli::parse();
 
-    let target = if cli.negative { -cli.target.0 } else { cli.target.0 };
+    let target = if cli.negative {
+        -cli.target.0
+    } else {
+        cli.target.0
+    };
     if !cli.fractions && !target.is_integer() {
         return Err("Tried to generate non-integer number without enabling fractions".into());
     }
 
-    let GeneratedNumber { direction, pattern, bounds, num_points, num_segments } =
-        generate_number_pattern(target, !cli.keep_larger, cli.fractions, cli.options)
-            .ok_or_else(|| format!("No pattern found for {target}"))?;
+    let GeneratedNumber {
+        direction,
+        pattern,
+        bounds,
+        num_points,
+        num_segments,
+    } = generate_number_pattern(target, !cli.keep_larger, cli.fractions, cli.options)
+        .ok_or_else(|| format!("No pattern found for {target}"))?;
 
     let Bounds { q, r, s } = bounds;
     println!(

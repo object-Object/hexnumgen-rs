@@ -1,8 +1,7 @@
 use std::cmp::{max, min};
 
-use crate::hex_math::{Coord, Segment};
-
 use super::Bounds;
+use crate::hex_math::{Coord, Segment};
 
 #[derive(Debug, Clone, Copy)]
 pub struct MinMax {
@@ -47,7 +46,14 @@ impl From<&Vec<Segment>> for MinMax {
             }
         }
 
-        Self { min_q, max_q, min_r, max_r, min_s, max_s }
+        Self {
+            min_q,
+            max_q,
+            min_r,
+            max_r,
+            min_s,
+            max_s,
+        }
     }
 }
 

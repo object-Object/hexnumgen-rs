@@ -34,14 +34,29 @@ fn main() -> Result<()> {
     let margin = point_width / 2.;
 
     // haha pp
-    let mut pp = PatternPlotter::new((width + 2. * margin).ceil() as u32, (height + 2. * margin).ceil() as u32)
-        .context("Failed to create PatternPlotter".to_string())?;
+    let mut pp = PatternPlotter::new(
+        (width + 2. * margin).ceil() as u32,
+        (height + 2. * margin).ceil() as u32,
+    )
+    .context("Failed to create PatternPlotter".to_string())?;
 
     let transform = Transform::from_translate(-min_x + margin, -min_y + margin);
-    pp.plot_monochrome_line(&points, pixel_size, line_width, Color::from_rgba8(168, 30, 227, 255), Some(transform))
-        .context("Failed to plot line")?;
-    pp.plot_monochrome_points(&points, pixel_size, point_width, Color::WHITE, Some(transform))
-        .context("Failed to plot points")?;
+    pp.plot_monochrome_line(
+        &points,
+        pixel_size,
+        line_width,
+        Color::from_rgba8(168, 30, 227, 255),
+        Some(transform),
+    )
+    .context("Failed to plot line")?;
+    pp.plot_monochrome_points(
+        &points,
+        pixel_size,
+        point_width,
+        Color::WHITE,
+        Some(transform),
+    )
+    .context("Failed to plot points")?;
 
     Ok(pp.save_png("out.png")?)
 }

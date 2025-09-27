@@ -1,6 +1,7 @@
-use crate::errors::{HexError, HexResult};
 use num_rational::Ratio;
 use strum::EnumIter;
+
+use crate::errors::{HexError, HexResult};
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum Angle {

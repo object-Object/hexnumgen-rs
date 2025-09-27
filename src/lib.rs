@@ -1,5 +1,3 @@
-#![feature(let_chains, type_alias_impl_trait, cfg_eval)]
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -12,24 +10,22 @@ mod traits;
 mod utils;
 
 use clap::Subcommand;
+pub use drawing::{PatternPlotter, pattern_to_points};
+pub use hex_math::Direction;
 use num_rational::Ratio;
-use numgen::{
-    generators::{
-        traits::PathGenerator, AStarParallelSplitPathGenerator, AStarPathGenerator, BeamParallelPoolPathGenerator,
-        BeamParallelSplitPathGenerator, BeamPathGenerator,
-    },
-    Path,
+pub use numgen::{
+    Bounds,
+    generators::{AStarOptions, AStarSplitOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
 };
-
+use numgen::{
+    Path,
+    generators::{
+        AStarParallelSplitPathGenerator, AStarPathGenerator, BeamParallelPoolPathGenerator,
+        BeamParallelSplitPathGenerator, BeamPathGenerator, traits::PathGenerator,
+    },
+};
 #[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
-
-pub use drawing::{pattern_to_points, PatternPlotter};
-pub use hex_math::Direction;
-pub use numgen::{
-    generators::{AStarOptions, AStarSplitOptions, BeamOptions, BeamPoolOptions, BeamSplitOptions},
-    Bounds,
-};
 
 #[cfg_attr(feature = "pyo3", derive(FromPyObject))]
 pub enum PyRatio {
@@ -96,14 +92,18 @@ pub fn generate_number_pattern(
 ) -> Option<GeneratedNumber> {
     // TODO: fix these types. ew
     match options {
-        GeneratorOptions::Beam(opts) => BeamPathGenerator::new(target, trim_larger, allow_fractions, opts).run(),
+        GeneratorOptions::Beam(opts) => {
+            BeamPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
+        }
         GeneratorOptions::BeamPool(opts) => {
             BeamParallelPoolPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
         }
         GeneratorOptions::BeamSplit(opts) => {
             BeamParallelSplitPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
         }
-        GeneratorOptions::AStar(opts) => AStarPathGenerator::new(target, trim_larger, allow_fractions, opts).run(),
+        GeneratorOptions::AStar(opts) => {
+            AStarPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
+        }
         GeneratorOptions::AStarSplit(opts) => {
             AStarParallelSplitPathGenerator::new(target, trim_larger, allow_fractions, opts).run()
         }
@@ -125,7 +125,7 @@ fn generate_number_pattern_py(
 
 #[cfg(feature = "pyo3")]
 #[pymodule]
-fn hexnumgen(_py: Python, m: &PyModule) -> PyResult<()> {
+fn hexnumgen(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_number_pattern_py, m)?)?;
     m.add_class::<GeneratedNumber>()?;
     m.add_class::<Bounds>()?;

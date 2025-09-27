@@ -1,5 +1,6 @@
+# pyright: reportUnknownMemberType=information
+
 import matplotlib.pyplot as plt
-import pandas as pd
 from display_perf import read_dump_file
 from matplotlib.axes import Axes
 
@@ -24,7 +25,7 @@ def plot_eff(
     if isinstance(par_filename, str):
         par_filename = [par_filename.format(t) for t in thread_counts]
 
-    y = []
+    y = list[float]()
     for threads, filename in zip(thread_counts, par_filename):
         df = read_dump_file(f"out/{filename}.json")[1]
         y.append((seq_time / (threads * df.time)).mean())
@@ -38,18 +39,22 @@ if __name__ == "__main__":
 
     # BeamPool
     for c in [50, 100, 200]:
-        plot_eff(ax1, f"{c} carryover", f"Beam_c{c}", f"BeamPool_c{c}_t{{}}", thread_counts)
+        plot_eff(
+            ax1, f"{c} carryover", f"Beam_c{c}", f"BeamPool_c{c}_t{{}}", thread_counts
+        )
     style_ax(ax1, "BeamPool", thread_counts)
     ax1.set_ylabel("Efficiency (speedup/threads)")
 
     # BeamSplit
     for c in [50, 100, 200]:
-        plot_eff(ax2, f"{c} carryover", f"Beam_c{c}", f"BeamSplit_c{c}_t{{}}", thread_counts)
+        plot_eff(
+            ax2, f"{c} carryover", f"Beam_c{c}", f"BeamSplit_c{c}_t{{}}", thread_counts
+        )
     plot_eff(
         ax2,
         "(768/threads) carryover",
         "Beam_c768",
-        [f"BeamSplit_c{768//t}_t{t}" for t in thread_counts],
+        [f"BeamSplit_c{768 // t}_t{t}" for t in thread_counts],
         thread_counts,
     )
     style_ax(ax2, "BeamSplit", thread_counts)
@@ -59,5 +64,5 @@ if __name__ == "__main__":
     plot_eff(ax3, "Keep larger", "AStar_noTL", "AStarSplit_t{}_noTL", thread_counts)
     style_ax(ax3, "AStarSplit", thread_counts)
 
-    fig.set_tight_layout(True)
+    fig.tight_layout()
     plt.show()

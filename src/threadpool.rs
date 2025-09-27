@@ -45,7 +45,10 @@ where
                 }
                 Ok(())
             });
-            threads.push(ThreadPoolThread { arg_tx, _handle: handle });
+            threads.push(ThreadPoolThread {
+                arg_tx,
+                _handle: handle,
+            });
         }
 
         Self { threads, res_rx }
@@ -58,7 +61,10 @@ where
         let mut thread_index = 0;
         for (arg_index, arg) in args.into_iter().enumerate() {
             // TODO: return error instead of unwrap?
-            self.threads[thread_index].arg_tx.send((arg_index, arg)).unwrap();
+            self.threads[thread_index]
+                .arg_tx
+                .send((arg_index, arg))
+                .unwrap();
             thread_index = (thread_index + 1) % self.threads.len();
         }
 

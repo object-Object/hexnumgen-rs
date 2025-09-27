@@ -3,18 +3,17 @@ use std::{
     thread::{self, JoinHandle},
 };
 
-use crate::{
-    numgen::{Bounds, Path, PathLimits, SharedPath},
-    utils::drain_every_other,
-};
 use clap::Args;
 use num_rational::Ratio;
 use parking_lot::{Condvar, Mutex, RwLock};
-
 #[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 use super::traits::{BeamSearch, PathGenerator, Split};
+use crate::{
+    numgen::{Bounds, Path, PathLimits, SharedPath},
+    utils::drain_every_other,
+};
 
 #[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
@@ -31,7 +30,11 @@ impl BeamSplitOptions {
     #[cfg(feature = "pyo3")]
     #[new]
     fn new(bounds: Bounds, carryover: usize, num_threads: usize) -> Self {
-        Self { bounds, carryover, num_threads }
+        Self {
+            bounds,
+            carryover,
+            num_threads,
+        }
     }
 }
 
@@ -55,7 +58,11 @@ impl PathGenerator for BeamParallelSplitPathGenerator {
         target: Ratio<i64>,
         trim_larger: bool,
         allow_fractions: bool,
-        Self::Opts { bounds, carryover, num_threads }: Self::Opts,
+        Self::Opts {
+            bounds,
+            carryover,
+            num_threads,
+        }: Self::Opts,
     ) -> Self {
         Self {
             limits: PathLimits::bounded(target, trim_larger, allow_fractions, bounds),

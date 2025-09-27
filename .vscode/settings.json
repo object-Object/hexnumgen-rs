@@ -1,13 +1,16 @@
 {
     "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true,
+            "source.organizeImports.ruff": "explicit"
         },
+        "editor.rulers": [88],
     },
-    "isort.args": ["--profile", "black"],
-    "python.formatting.provider": "black",
-    "python.analysis.typeCheckingMode": "basic",
+    "ruff.organizeImports": true,
+    "ruff.lint.ignore": ["I"],
+    "python.languageServer": "Pylance",
     "python.analysis.diagnosticMode": "workspace",
-    // "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+    "rust-analyzer.cargo.features": "all",
 }

@@ -1,7 +1,8 @@
+# pyright: reportUnknownMemberType=information
+
 import json
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from measure_perf import PerfDump
@@ -27,10 +28,6 @@ def read_dump_file(filename: str) -> DfDump:
         label = "Old" + label
 
     return (label, pd.DataFrame(dump["data"]).set_index("target"))
-
-
-def agg_data(data: list | pd.Series) -> str:
-    return f"min/max/avg/tot: {min(data):.4f}/{max(data):.4f}/{sum(data)/len(data):.4f}/{sum(data):.4f}"
 
 
 def plot_series(
@@ -101,5 +98,5 @@ if __name__ == "__main__":
 
     ax1.set_xmargin(0.01)
 
-    fig.set_tight_layout(True)
+    fig.tight_layout()
     plt.show()

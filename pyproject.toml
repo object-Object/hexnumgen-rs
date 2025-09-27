@@ -1,9 +1,112 @@
 [build-system]
-requires = ["maturin>=0.13,<0.14"]
+requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
+
+[project]
+name = "hexnumgen"
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+build = [
+    "maturin>=1.9.4",
+]
+dev = [
+    "ruff>=0.13.2",
+]
+scripts = [
+    "matplotlib>=3.10.6",
+    "numpy>=2.3.3",
+    "pandas>=2.3.2",
+    "tqdm>=4.67.1",
+]
 
 [tool.maturin]
 features = ["pyo3"]
 
-[tool.black]
-line-length = 95
+[tool.uv]
+default-groups = ["build", "dev", "scripts"]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "Cargo.lock" },
+    { file = "src/**/*.rs" },
+]
+
+[tool.uv.config-settings]
+build-args = "--profile=dev"
+
+[tool.ruff]
+preview = true
+extend-exclude = [
+    "**/__pycache__",
+    "**/.*",
+    "**/out",
+    "**/target",
+    "**/venv",
+]
+
+[tool.ruff.lint]
+extend-select = [
+    "I", # import sorting
+    "RUF022", # __all__ sorting
+    "TID252", # ban relative imports
+]
+extend-ignore = [
+    # covered by Pyright
+    "F401", # imported but unused
+    "F821", # undefined variable
+    "F841", # unused variable
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = [
+    "hexnumgen",
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.pyright]
+pythonVersion = "3.11"
+pythonPlatform = "All"
+
+typeCheckingMode = "standard"
+
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
+
+reportConstantRedefinition = "error"
+reportIncompleteStub = "error"
+reportInconsistentConstructor = "error"
+reportInvalidStubStatement = "error"
+
+reportDeprecated = "warning"
+reportDuplicateImport = "warning"
+reportMatchNotExhaustive = "warning"
+reportMissingParameterType = "warning"
+reportMissingTypeArgument = "warning"
+reportMissingTypeStubs = "warning"
+reportPrivateUsage = "warning"
+reportTypeCommentUsage = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownMemberType = "warning"
+reportUnknownParameterType = "warning"
+reportUnknownVariableType = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUntypedBaseClass = "warning"
+reportUntypedClassDecorator = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedNamedTuple = "warning"
+reportUnusedClass = "warning"
+reportUnusedExpression = "warning"
+reportUnusedFunction = "warning"
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"

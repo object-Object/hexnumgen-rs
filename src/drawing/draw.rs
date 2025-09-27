@@ -1,8 +1,8 @@
-use crate::{errors::HexResult, hex_math::Coord, Direction};
-
 use png::EncodingError;
 use tiny_skia::*;
 use tiny_skia_path::PathStroker;
+
+use crate::{errors::HexResult, hex_math::Coord, Direction};
 
 // TODO: return iterator instead? might be faster (need to benchmark)
 pub fn pattern_to_points(direction: Direction, pattern: &str) -> HexResult<Vec<Coord>> {
@@ -32,8 +32,15 @@ impl PatternPlotter<'_> {
         Some(Self {
             stroker: PathStroker::new(),
             pixmap: Pixmap::new(width, height)?,
-            paint: Paint { anti_alias: true, ..Default::default() },
-            stroke: Stroke { line_cap: LineCap::Round, line_join: LineJoin::Round, ..Default::default() },
+            paint: Paint {
+                anti_alias: true,
+                ..Default::default()
+            },
+            stroke: Stroke {
+                line_cap: LineCap::Round,
+                line_join: LineJoin::Round,
+                ..Default::default()
+            },
         })
     }
 
@@ -78,7 +85,13 @@ impl PatternPlotter<'_> {
         for point in points {
             let (x, y) = point.pixel(pixel_size);
             let path = PathBuilder::from_circle(x, y, radius)?;
-            self.pixmap.fill_path(&path, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
+            self.pixmap.fill_path(
+                &path,
+                &self.paint,
+                FillRule::Winding,
+                transform.unwrap_or_default(),
+                None,
+            );
         }
 
         Some(())
@@ -94,7 +107,13 @@ impl PatternPlotter<'_> {
 
     fn stroke_path(&mut self, path: &Path, transform: Option<Transform>) -> Option<()> {
         let stroked = self.stroker.stroke(path, &self.stroke, 1.)?;
-        self.pixmap.fill_path(&stroked, &self.paint, FillRule::Winding, transform.unwrap_or_default(), None);
+        self.pixmap.fill_path(
+            &stroked,
+            &self.paint,
+            FillRule::Winding,
+            transform.unwrap_or_default(),
+            None,
+        );
         Some(())
     }
 }

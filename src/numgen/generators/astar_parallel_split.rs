@@ -1,24 +1,22 @@
-use clap::Args;
-use itertools::Itertools;
-use num_rational::Ratio;
-use parking_lot::{Condvar, Mutex, RwLock};
-
-#[cfg(feature = "pyo3")]
-use pyo3::prelude::*;
-
-use crate::{
-    numgen::{Path, PathLimits, QueuedPath, SharedPath},
-    traits::RwLockWriteIf,
-    utils::NonZeroSign,
-};
-
 use std::{
     collections::BinaryHeap,
     sync::Arc,
     thread::{self, JoinHandle},
 };
 
+use clap::Args;
+use itertools::Itertools;
+use num_rational::Ratio;
+use parking_lot::{Condvar, Mutex, RwLock};
+#[cfg(feature = "pyo3")]
+use pyo3::prelude::*;
+
 use super::traits::{AStar, PathGenerator, Split};
+use crate::{
+    numgen::{Path, PathLimits, QueuedPath, SharedPath},
+    traits::RwLockWriteIf,
+    utils::NonZeroSign,
+};
 
 #[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
 #[derive(Clone, Copy, Args)]
@@ -66,7 +64,7 @@ impl PathGenerator for AStarParallelSplitPathGenerator {
         allow_fractions: bool,
         AStarSplitOptions { num_threads }: AStarSplitOptions,
     ) -> Self {
-        let mut gen = Self {
+        let mut generator = Self {
             limits: PathLimits::unbounded(target, trim_larger, allow_fractions),
             num_threads,
             smallest: None,
@@ -75,8 +73,8 @@ impl PathGenerator for AStarParallelSplitPathGenerator {
             free_threads: Arc::new(RwLock::new(num_threads - 1)),
             done: Arc::new((false.into(), Condvar::new())),
         };
-        gen.push_path(Path::zero(NonZeroSign::from(target)));
-        gen
+        generator.push_path(Path::zero(NonZeroSign::from(target)));
+        generator
     }
 
     fn run(self) -> Option<Path> {
@@ -152,7 +150,10 @@ impl AStar for AStarParallelSplitPathGenerator {
                 let new_smallest = new_smallest.clone();
 
                 // if we found a better result than the shared one, update the shared one
-                if let Some(mut lock) = self.shared_smallest.write_if(|s| new_smallest.should_replace(s)) {
+                if let Some(mut lock) = self
+                    .shared_smallest
+                    .write_if(|s| new_smallest.should_replace(s))
+                {
                     *lock = Some(new_smallest.clone());
                 }
 

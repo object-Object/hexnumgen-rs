@@ -1,16 +1,16 @@
+use std::{collections::HashSet, sync::Arc};
+
 use itertools::Itertools;
 use num_rational::Ratio;
 use parking_lot::RwLock;
-use std::{collections::HashSet, sync::Arc};
 
+use super::{Bounds, MinMax};
 use crate::{
     errors::{HexError, HexResult},
     hex_math::{get_pattern_segments, Angle, Coord, Direction, Segment},
     traits::UnsignedAbsRatio,
     utils::{cloned_push, cloned_union_single, NonZeroSign},
 };
-
-use super::{Bounds, MinMax};
 
 pub type SharedPath = Arc<RwLock<Option<Path>>>;
 
@@ -23,16 +23,33 @@ pub struct PathLimits {
 }
 
 impl PathLimits {
-    pub fn bounded(signed_target: Ratio<i64>, trim_larger: bool, allow_fractions: bool, bounds: Bounds) -> Self {
-        Self { target: signed_target.unsigned_abs(), trim_larger, allow_fractions, bounds: Some(bounds) }
+    pub fn bounded(
+        signed_target: Ratio<i64>,
+        trim_larger: bool,
+        allow_fractions: bool,
+        bounds: Bounds,
+    ) -> Self {
+        Self {
+            target: signed_target.unsigned_abs(),
+            trim_larger,
+            allow_fractions,
+            bounds: Some(bounds),
+        }
     }
 
     pub fn unbounded(signed_target: Ratio<i64>, trim_larger: bool, allow_fractions: bool) -> Self {
-        Self { target: signed_target.unsigned_abs(), trim_larger, allow_fractions, bounds: None }
+        Self {
+            target: signed_target.unsigned_abs(),
+            trim_larger,
+            allow_fractions,
+            bounds: None,
+        }
     }
 
     fn test_value(&self, new_value: Ratio<u64>) -> HexResult<Ratio<u64>> {
-        if self.trim_larger && new_value > self.target || !self.allow_fractions && !new_value.is_integer() {
+        if self.trim_larger && new_value > self.target
+            || !self.allow_fractions && !new_value.is_integer()
+        {
             return Err(HexError::OutOfLimits);
         }
         Ok(new_value)
@@ -68,7 +85,11 @@ impl Path {
             value: 0.into(),
             segments: segments.clone(),
             segments_set: HashSet::from_iter(segments.clone()),
-            points_set: HashSet::from_iter(segments.iter().flat_map(|segment| [segment.root(), segment.end()])),
+            points_set: HashSet::from_iter(
+                segments
+                    .iter()
+                    .flat_map(|segment| [segment.root(), segment.end()]),
+            ),
             minmax: MinMax::from(&segments),
         }
     }
@@ -140,6 +161,10 @@ impl Path {
     }
 
     pub fn pattern(&self) -> String {
-        self.segments.iter().tuple_windows().map(|(a, b)| char::from(b.direction().angle_from(a.direction()))).collect()
+        self.segments
+            .iter()
+            .tuple_windows()
+            .map(|(a, b)| char::from(b.direction().angle_from(a.direction())))
+            .collect()
     }
 }

@@ -52,7 +52,12 @@ pub trait BeamSearch {
             .paths()
             .iter()
             .cartesian_product(Angle::iter())
-            .filter_map(|(p, a)| p.try_with_angle(a, self.limits(), |n| n.should_replace(&self.smallest().read())).ok())
+            .filter_map(|(p, a)| {
+                p.try_with_angle(a, self.limits(), |n| {
+                    n.should_replace(&self.smallest().read())
+                })
+                .ok()
+            })
             .collect();
     }
 

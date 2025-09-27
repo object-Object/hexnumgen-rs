@@ -1,9 +1,9 @@
+use std::{collections::HashSet, hash::Hash};
+
 use itertools::Itertools;
 use num_integer::Integer;
 use num_rational::Ratio;
 use num_traits::Signed;
-use std::collections::HashSet;
-use std::hash::Hash;
 
 #[derive(Debug, Clone, Copy)]
 pub enum NonZeroSign {
@@ -60,7 +60,11 @@ where
 pub fn drain_every_other<T>(items: &mut Vec<T>) -> Vec<T> {
     let mut opt_items = items.drain(..).map(Some).collect_vec();
 
-    let picked = opt_items.iter_mut().step_by(2).map(|i| i.take().unwrap()).collect_vec();
+    let picked = opt_items
+        .iter_mut()
+        .step_by(2)
+        .map(|i| i.take().unwrap())
+        .collect_vec();
 
     items.extend(opt_items.into_iter().flatten());
 

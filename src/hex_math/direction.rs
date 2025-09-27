@@ -2,9 +2,8 @@ use std::{fmt::Display, ops::Neg, str::FromStr};
 
 use aho_corasick::AhoCorasick;
 
-use crate::errors::HexError;
-
 use super::Angle;
+use crate::errors::HexError;
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
@@ -54,7 +53,10 @@ impl FromStr for Direction {
     type Err = HexError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match AC.replace_all(&s.to_ascii_lowercase(), REPLACE_WITH).as_str() {
+        match AC
+            .replace_all(&s.to_ascii_lowercase(), REPLACE_WITH)
+            .as_str()
+        {
             "ne" => Ok(Self::NorthEast),
             "e" => Ok(Self::East),
             "se" => Ok(Self::SouthEast),
@@ -76,7 +78,7 @@ impl Display for Direction {
             Direction::West => "WEST",
             Direction::NorthWest => "NORTH_WEST",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 

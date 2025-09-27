@@ -44,7 +44,9 @@ class AStarSplitOptions:
     num_threads: int
     def __init__(self, num_threads: int) -> None: ...
 
-Options = BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions | AStarSplitOptions
+Options = (
+    BeamOptions | BeamPoolOptions | BeamSplitOptions | AStarOptions | AStarSplitOptions
+)
 
 def generate_number_pattern(
     target: int | tuple[int, int],

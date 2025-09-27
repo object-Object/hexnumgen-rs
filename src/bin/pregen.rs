@@ -1,16 +1,16 @@
-use clap::Parser;
-use hexnumgen::{generate_number_pattern, AStarOptions, Direction, GeneratedNumber};
-
-use anyhow::Result;
-use rand::{seq::SliceRandom, thread_rng};
-use regex::Regex;
-use serde::Serialize;
 use std::{
     collections::BTreeMap,
     fs,
     sync::mpsc::{self, Sender},
     thread,
 };
+
+use anyhow::Result;
+use clap::Parser;
+use hexnumgen::{AStarOptions, Direction, GeneratedNumber, generate_number_pattern};
+use rand::{rng, seq::SliceRandom};
+use regex::Regex;
+use serde::Serialize;
 
 fn n_groups<T>(mut values: Vec<T>, n: usize) -> Vec<Vec<T>> {
     let mut groups = Vec::new();
@@ -31,9 +31,13 @@ fn find_patterns(targets: Vec<i64>) -> BTreeMap<i64, String> {
     for (i, &target) in targets.iter().enumerate() {
         println!("{}/{}", i + 1, targets.len());
 
-        let GeneratedNumber { pattern, .. } =
-            generate_number_pattern(target.into(), false, false, hexnumgen::GeneratorOptions::AStar(AStarOptions {}))
-                .unwrap();
+        let GeneratedNumber { pattern, .. } = generate_number_pattern(
+            target.into(),
+            false,
+            false,
+            hexnumgen::GeneratorOptions::AStar(AStarOptions {}),
+        )
+        .unwrap();
 
         data.insert(target, re.replace(&pattern, "").to_string());
     }
@@ -47,8 +51,12 @@ fn worker(targets: Vec<i64>, tx: Sender<BTreeMap<i64, String>>) {
 
 fn write_pregen<T: Serialize>(max: u64, pretty: bool, data: T) -> Result<()> {
     Ok(fs::write(
-        format!("numbers_{}.json", max),
-        if pretty { serde_json::to_string_pretty(&data) } else { serde_json::to_string(&data) }?,
+        format!("numbers_{max}.json"),
+        if pretty {
+            serde_json::to_string_pretty(&data)
+        } else {
+            serde_json::to_string(&data)
+        }?,
     )?)
 }
 
@@ -75,7 +83,7 @@ fn main() -> Result<()> {
     let mut all_targets = Vec::from_iter(0..=(cli.max as i64));
     let all_data = match cli.threads {
         Some(threads) => {
-            all_targets.shuffle(&mut thread_rng());
+            all_targets.shuffle(&mut rng());
 
             let (tx, rx) = mpsc::channel();
 
@@ -99,9 +107,15 @@ fn main() -> Result<()> {
     } else {
         let mut pos_neg_values: BTreeMap<i64, (String, String)> = BTreeMap::new();
         for (target, tail) in all_data {
-            pos_neg_values.insert(target, (Direction::SouthEast.to_string(), format!("aqaa{tail}")));
+            pos_neg_values.insert(
+                target,
+                (Direction::SouthEast.to_string(), format!("aqaa{tail}")),
+            );
             if target != 0 {
-                pos_neg_values.insert(-target, (Direction::NorthEast.to_string(), format!("dedd{tail}")));
+                pos_neg_values.insert(
+                    -target,
+                    (Direction::NorthEast.to_string(), format!("dedd{tail}")),
+                );
             }
         }
         write_pregen(cli.max, cli.pretty, pos_neg_values)

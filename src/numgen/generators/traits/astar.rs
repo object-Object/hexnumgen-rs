@@ -69,7 +69,10 @@ pub trait AStar {
 
     fn next_paths(&self, path: Path) -> Vec<Path> {
         Angle::iter()
-            .filter_map(|a| path.try_with_angle(a, self.limits(), |n| n.should_replace(self.smallest())).ok())
+            .filter_map(|a| {
+                path.try_with_angle(a, self.limits(), |n| n.should_replace(self.smallest()))
+                    .ok()
+            })
             .collect()
     }
 
@@ -92,7 +95,8 @@ pub trait AStar {
 
     fn update_smallest_and_prune(&mut self, new_smallest: Path) {
         let new_smallest = Some(new_smallest);
-        self.frontier_mut().retain(|qp| qp.path.should_replace(&new_smallest));
+        self.frontier_mut()
+            .retain(|qp| qp.path.should_replace(&new_smallest));
         *self.smallest_mut() = new_smallest;
     }
 

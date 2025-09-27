@@ -3,11 +3,13 @@
 ## Installation
 
 * [Install Rust](https://www.rust-lang.org/tools/install).
-* [Install Python](https://wiki.python.org/moin/BeginnersGuide/Download) if you don't already have a reasonably recent version installed.
+* [Install uv](https://docs.astral.sh/uv/getting-started/installation/).
 * Clone/download this repo and enter it.
-* Run `cargo fetch`.
-* [Create and activate a venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment).
-* Run `pip install -r scripts/requirements.txt`.
+* Run these commands:
+  ```sh
+  cargo fetch
+  uv sync
+  ```
 
 ## Usage (CLI)
 
@@ -24,8 +26,8 @@ cargo run --release --bin pregen -- --help
 Remember to activate your venv before running these commands.
 
 ```sh
-# build and locally install the Python package
-maturin develop --release
+# build and locally install the Python package in release mode
+maturin develop --uv --release
 
 # small demo script
 python scripts/example.py
@@ -40,7 +42,7 @@ python scripts/display_perf.py
 python scripts/efficiency.py
 ```
 
-https://pyo3.rs/v0.17.3/getting_started
+https://pyo3.rs/v0.26.0/getting_started
 
 https://github.com/PyO3/maturin
 

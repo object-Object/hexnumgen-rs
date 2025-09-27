@@ -64,7 +64,8 @@ impl Hash for Segment {
 
 impl PartialEq for Segment {
     fn eq(&self, other: &Self) -> bool {
-        self.canonical_root() == other.canonical_root() && self.canonical_direction() == other.canonical_direction()
+        self.canonical_root() == other.canonical_root()
+            && self.canonical_direction() == other.canonical_direction()
     }
 }
 impl Eq for Segment {}
